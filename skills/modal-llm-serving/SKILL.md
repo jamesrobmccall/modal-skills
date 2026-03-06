@@ -37,6 +37,7 @@ Use this skill when the task is to serve an LLM on Modal. Keep it focused on inf
 - Use SGLang only when the task explicitly prioritizes lowest latency and can tolerate a more advanced setup.
 - Use vLLM `LLM` style batch processing only when the task is offline or batch oriented and does not need per-request HTTP behavior.
 - Use snapshot-based cold-start reduction only when startup latency matters enough to justify extra complexity.
+- When you need extra vendor-doc context to fill a gap, fold the durable guidance back into the relevant `references/` file or `scripts/` example before finishing the task.
 
 ## Choose the Workflow
 
@@ -63,3 +64,4 @@ Use vLLM `LLM` inside `@app.cls` or another batch worker when the task is about 
 - Read [references/vllm-cold-starts.md](references/vllm-cold-starts.md) only when cold-start reduction is worth snapshot complexity.
 - Read [references/sglang-low-latency.md](references/sglang-low-latency.md) only when the task explicitly optimizes for low latency.
 - Read [references/vllm-throughput.md](references/vllm-throughput.md) only when the workload is throughput or batch oriented.
+- Reuse [scripts/qwen3_throughput.py](scripts/qwen3_throughput.py) when the task is a small, throughput-oriented Qwen deployment that benefits from a pinned-model batch worker and a local benchmark entrypoint.
