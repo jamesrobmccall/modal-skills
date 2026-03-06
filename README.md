@@ -1,39 +1,21 @@
 # Modal Skills
 
-Modal-focused skills for coding agents.
+A collection of [Claude Skills](https://claude.com/blog/complete-guide-to-building-skills-for-claude) for working with [Modal](https://modal.com) — the cloud platform for running AI workloads, sandboxed code execution, and GPU-accelerated inference.
 
-## Repository Layout
+These skills teach Claude how to create Modal Sandboxes, deploy LLM inference services, and follow Modal best practices, so you can describe what you want and get working Modal code.
 
-This repo is organized for the `skills` CLI and `skills.sh` discovery flow:
+## Available Skills
 
-```text
-skills/
-  modal-sandbox/
-    SKILL.md
-    agents/
-    references/
-    scripts/
-```
+| Skill | Description |
+|-------|-------------|
+| [modal-sandbox](skills/modal-sandbox/) | Create and control Modal Sandboxes for secure code execution, tunneled services, file exchange, and snapshot-based persistence. |
+| [modal-llm-serving](skills/modal-llm-serving/) | Serve open-weight LLMs on Modal with vLLM or SGLang — online APIs, cold-start reduction, low-latency, and batch inference. |
 
-Add future skills under `skills/<skill-name>/`.
+## Installation
 
-## Local Discovery
+### From GitHub
 
-List skills in this repo:
-
-```bash
-npx skills add . --list
-```
-
-List a specific skill path directly:
-
-```bash
-npx skills add ./skills/modal-sandbox --list
-```
-
-## GitHub Install
-
-Once this repo is pushed to GitHub, install from the repo root:
+Install a specific skill:
 
 ```bash
 npx skills add <owner>/<repo> --skill modal-sandbox
@@ -45,9 +27,44 @@ Or install from the skill subdirectory directly:
 npx skills add https://github.com/<owner>/<repo>/tree/main/skills/modal-sandbox
 ```
 
-## Publish Notes
+### Local Discovery
 
-- Keep each skill self-contained under `skills/<skill-name>/`.
-- Keep `SKILL.md` frontmatter valid and descriptive so discovery works well.
-- Avoid extra docs inside skill folders; put repo-level guidance here instead.
-- Verify discovery with `npx skills add . --list` before pushing.
+Clone the repo and list available skills:
+
+```bash
+npx skills add . --list
+```
+
+List a specific skill:
+
+```bash
+npx skills add ./skills/modal-sandbox --list
+```
+
+## Repository Layout
+
+```text
+skills/
+  <skill-name>/
+    SKILL.md          # Core instructions with YAML frontmatter
+    agents/           # Agent interface configuration
+    references/       # Detailed documentation loaded on-demand
+    scripts/          # Executable examples and tests
+```
+
+## Contributing
+
+To add a new skill:
+
+1. Create a new directory under `skills/<skill-name>/` using kebab-case naming.
+2. Add a `SKILL.md` with valid YAML frontmatter (`name`, `description`, `license`).
+3. Put detailed documentation in `references/` to keep `SKILL.md` under 5,000 words.
+4. Add runnable examples or tests in `scripts/`.
+5. Add an agent interface file in `agents/` (see existing skills for the format).
+6. Verify discovery with `npx skills add . --list` before opening a PR.
+
+See the [Anthropic skill creation guide](https://claude.com/blog/complete-guide-to-building-skills-for-claude) for best practices on writing effective skills.
+
+## License
+
+[MIT](LICENSE)

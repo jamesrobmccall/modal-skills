@@ -1,6 +1,9 @@
 ---
 name: modal-sandbox
-description: Python-first Modal Sandbox creation and control for secure code execution, long-lived controller processes, tunneled services, file exchange, and snapshot-based persistence. Use when Codex needs to create, attach to, debug, or restore a Modal Sandbox, or wire one into an agent or code interpreter workflow.
+description: Create and control Modal Sandboxes for secure code execution, long-lived controller processes, tunneled services, file exchange, and snapshot-based persistence. Use when creating, attaching to, debugging, or restoring a Modal Sandbox, or wiring one into an agent or code-interpreter workflow.
+license: MIT
+metadata:
+  version: "0.1.0"
 ---
 
 # Modal Sandbox
@@ -20,7 +23,7 @@ modal --version
 
 - Do not assume `python3` can import `modal` just because the `modal` CLI exists.
 - Use the interpreter from the active Modal environment, project venv, or the environment behind the installed CLI.
-- As of Modal CLI 1.3.4, do not look for a `modal sandbox` subcommand. Use `modal shell <sandbox_id>` for direct access and `modal container ...` only for generic container inspection.
+- Do not look for a `modal sandbox` subcommand. Use `modal shell <sandbox_id>` for direct access and `modal container ...` only for generic container inspection.
 - Wrap sandbox creation in `with modal.enable_output():` when you want local image-build and provisioning logs.
 - Set `verbose=True` on `Sandbox.create(...)` when you want sandbox operation logs to show up in Modal logs and local output.
 
@@ -106,6 +109,58 @@ modal shell sb-abc123
   - Avoid them while any `Sandbox.exec` process is still running.
   - Avoid relying on background processes launched via `exec` to restore cleanly.
 - Prefer filesystem snapshots unless the task explicitly requires in-memory process state.
+
+## Examples
+
+### Run a Python Script in a Sandbox
+
+User says: "Run this Python script in a sandbox."
+
+1. Create an app with `modal.App.lookup("script-runner", create_if_missing=True)`.
+2. Create a sandbox with `modal.Sandbox.create("sleep", "300", app=app)`.
+3. Upload the script with `sandbox.open("/tmp/script.py", "w")`.
+4. Execute with `sandbox.exec("python", "/tmp/script.py")` and read `stdout`.
+5. Terminate the sandbox.
+
+Result: Script output returned to the user.
+
+### Expose a Web Service From a Sandbox
+
+User says: "Start a web server in a sandbox and give me the URL."
+
+1. Create a sandbox with `encrypted_ports=[8080]`.
+2. Exec the server process inside the sandbox.
+3. Poll `sandbox.tunnels()` until a URL is available.
+4. Return the public tunnel URL to the user.
+
+Result: A publicly reachable URL serving traffic from the sandbox.
+
+### Snapshot and Restore a Sandbox
+
+User says: "Save my sandbox state so I can resume later."
+
+1. Call `sandbox.snapshot_filesystem()` to capture the full filesystem.
+2. Store the returned image reference.
+3. Later, create a new sandbox using the snapshot as its base image.
+
+Result: A new sandbox that picks up exactly where the previous one left off.
+
+## Troubleshooting
+
+### `modal` CLI not found or `import modal` fails
+Verify Modal is installed in the active Python environment. The `modal` CLI and the `modal` Python package may live in different environments.
+
+### Sandbox terminates unexpectedly
+The default sandbox lifetime is 5 minutes. Set `timeout` explicitly on `Sandbox.create(...)` for longer workloads (up to 24 hours).
+
+### `Sandbox.from_name(...)` returns nothing
+`from_name` only finds a currently running named sandbox on a deployed app. If the sandbox has terminated, create a new one.
+
+### Tunnel URL not available
+Poll `sandbox.tunnels()` — the URL may take a moment after the service starts. Ensure the correct port was passed to `encrypted_ports` or `unencrypted_ports`.
+
+### File writes not persisted after sandbox termination
+Use Volumes for data that must outlive a single sandbox. The direct filesystem API (`sandbox.open()`, etc.) is scoped to the sandbox's lifetime.
 
 ## References
 

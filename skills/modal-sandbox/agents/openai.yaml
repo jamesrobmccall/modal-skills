@@ -1,4 +1,12 @@
 interface:
   display_name: "Modal Sandbox"
-  short_description: "Provision and control Modal Sandboxes"
+  short_description: "Create and control Modal Sandboxes for secure code execution, tunneled services, and persistence."
   default_prompt: "Use $modal-sandbox to create, connect to, or persist a Modal Sandbox workflow."
+  tags:
+    - modal
+    - sandbox
+    - cloud
+    - code-execution
+  metadata:
+    version: "0.1.0"
+    license: MIT

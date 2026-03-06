@@ -1,4 +1,14 @@
 interface:
   display_name: "Modal LLM Serving"
-  short_description: "Serve and tune LLMs on Modal"
+  short_description: "Serve and tune open-weight LLMs on Modal with vLLM or SGLang."
   default_prompt: "Use $modal-llm-serving to deploy or tune a Modal-hosted vLLM or SGLang inference service."
+  tags:
+    - modal
+    - llm
+    - vllm
+    - sglang
+    - gpu
+    - inference
+  metadata:
+    version: "0.1.0"
+    license: MIT

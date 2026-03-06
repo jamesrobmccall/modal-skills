@@ -6,7 +6,7 @@ Use this reference when the task is about creating, reattaching to, or driving a
 
 - Create sandboxes from local code with `modal.App.lookup(..., create_if_missing=True)` and `modal.Sandbox.create(...)`.
 - Treat the Python SDK as the source of truth for create and control flows.
-- Avoid inventing a `modal sandbox` CLI workflow. As of Modal CLI 1.3.4, use `modal shell <sandbox_id>` to attach to a running sandbox instead.
+- Avoid inventing a `modal sandbox` CLI workflow. Use `modal shell <sandbox_id>` to attach to a running sandbox instead.
 
 ## Lifecycle Controls
 
