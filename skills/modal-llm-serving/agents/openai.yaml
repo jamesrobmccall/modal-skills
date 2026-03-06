@@ -1,0 +1,4 @@
+interface:
+  display_name: "Modal LLM Serving"
+  short_description: "Serve and tune LLMs on Modal"
+  default_prompt: "Use $modal-llm-serving to deploy or tune a Modal-hosted vLLM or SGLang inference service."
