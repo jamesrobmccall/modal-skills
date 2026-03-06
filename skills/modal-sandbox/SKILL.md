@@ -21,6 +21,8 @@ modal --version
 - Do not assume `python3` can import `modal` just because the `modal` CLI exists.
 - Use the interpreter from the active Modal environment, project venv, or the environment behind the installed CLI.
 - As of Modal CLI 1.3.4, do not look for a `modal sandbox` subcommand. Use `modal shell <sandbox_id>` for direct access and `modal container ...` only for generic container inspection.
+- Wrap sandbox creation in `with modal.enable_output():` when you want local image-build and provisioning logs.
+- Set `verbose=True` on `Sandbox.create(...)` when you want sandbox operation logs to show up in Modal logs and local output.
 
 2. Create an App before creating a sandbox from outside Modal.
 
@@ -69,6 +71,9 @@ modal shell sb-abc123
 - Use `timeout=` on `exec(...)` to bound command runtime separately from sandbox lifetime.
 - Pass `pty=True` only when a command genuinely requires a TTY.
 - Keep one controller process running inside the sandbox when the task needs stateful back-and-forth over `stdin` and `stdout`.
+- Expect sparse Modal logs when the sandbox's long-lived command is quiet, such as `sleep 300`.
+- If you want logs visible in `modal app logs` or the Modal dashboard, keep a long-lived process that writes to `stdout` or `stderr`, such as a web server or controller process.
+- Treat `exec(...)` output primarily as process output to read from the returned streams; tee it into your own logs if the task needs durable log visibility outside the caller.
 
 ## Expose Services
 
