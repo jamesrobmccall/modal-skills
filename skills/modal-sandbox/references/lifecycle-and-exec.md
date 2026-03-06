@@ -28,6 +28,14 @@ Use this reference when the task is about creating, reattaching to, or driving a
 - Set `pty=True` only for commands that genuinely require a TTY.
 - Set `timeout=` on `exec(...)` separately from sandbox lifetime when a single command should be bounded.
 
+## Logging
+
+- Wrap `Sandbox.create(...)` in `with modal.enable_output():` when you want build and provisioning output in the local terminal.
+- Set `verbose=True` on `Sandbox.create(...)` when you want sandbox operation logs emitted by Modal.
+- Expect empty or sparse app logs when the long-lived sandbox command is something quiet like `sleep`.
+- Expect service logs to appear in `modal app logs <app-name>` when the long-lived process writes to `stdout` or `stderr`.
+- Treat `exec(...)` output as caller-managed stream data; read it from `ContainerProcess.stdout` and `ContainerProcess.stderr`, and tee it yourself if it also needs to live in your app logs.
+
 ## Stateful Controller Loop
 
 - Start one long-lived process inside the sandbox when the task needs conversational state or a REPL.
