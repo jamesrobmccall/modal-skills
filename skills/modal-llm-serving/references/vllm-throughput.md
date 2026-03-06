@@ -16,7 +16,7 @@ Use this reference for offline or batch inference where the goal is maximum toke
 - Default to one GPU per replica for throughput per dollar unless the model does not fit.
 - Add more GPUs when the model requires it or when single-request latency matters more than efficiency.
 - Prefer Hopper-class GPUs for FP8-friendly models when the model and workload support them.
-- For small FP8 Qwen throughput jobs, start with a single H100 before exploring multi-GPU replicas; this matches Modal's current throughput example and keeps the deployment compute-bound.
+- For small FP8 models, start with a single H100 before exploring multi-GPU replicas to keep the deployment compute-bound.
 
 ## Throughput Knobs
 

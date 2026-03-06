@@ -35,4 +35,4 @@ Use this reference only when reducing vLLM startup latency matters enough to jus
 - Treat this as an advanced-only path.
 - Expect more model-specific and kernel-specific edge cases than with standard vLLM serving.
 - Prefer the standard vLLM path if the user only needs a simple deployable server.
-- Use the Ministral example as the source for the snapshot flow, not as a reason to broaden the skill into multimodal application design.
+- Refer to Modal's snapshot-based serving examples for the concrete snapshot flow pattern.
