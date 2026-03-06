@@ -1,0 +1,4 @@
+interface:
+  display_name: "Modal Sandbox"
+  short_description: "Provision and control Modal Sandboxes"
+  default_prompt: "Use $modal-sandbox to create, connect to, or persist a Modal Sandbox workflow."
