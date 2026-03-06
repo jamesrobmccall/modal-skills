@@ -1,0 +1,4 @@
+interface:
+  display_name: "Modal Batch Processing"
+  short_description: "Run scalable batch jobs on Modal"
+  default_prompt: "Use $modal-batch-processing to design or debug a Modal batch workflow using map, spawn, or dynamic batching."
