@@ -1,4 +1,9 @@
 interface:
   display_name: "Modal Batch Processing"
-  short_description: "Run scalable batch jobs on Modal"
-  default_prompt: "Use $modal-batch-processing to design or debug a Modal batch workflow using map, spawn, or dynamic batching."
+  short_description: "Design Modal batch workflows with map, spawn, and dynamic batching."
+  default_prompt: "Use $modal-batch-processing to choose and implement the right Modal batch pattern for fan-out, job queues, detached runs, or dynamic batching."
+  tags:
+    - modal
+    - python
+    - batch
+    - orchestration
