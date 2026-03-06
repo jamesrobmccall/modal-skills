@@ -1,15 +1,10 @@
 ---
 name: modal-batch-processing
-description: Design, implement, debug, and validate Modal batch-processing workflows for CPU or GPU jobs, including `.map` and `.starmap` fan-out, `.spawn` job queues, `.spawn_map` detached runs, and `@modal.batched` dynamic batching. Use when Codex needs to orchestrate large or bursty workloads on Modal, choose between ephemeral and deployed apps, retrieve async results, or tune retries, timeouts, `max_containers`, Volumes, or external result sinks. Do not use this skill for vLLM or SGLang serving architecture; use `modal-llm-serving` for LLM-serving-specific work.
+description: Design and debug Modal batch workloads using `.map`, `.starmap`, `.spawn`, `.spawn_map`, and `@modal.batched`. Use for detached job queues, result collection, concurrency limits, retries, timeouts, Volumes, and external result sinks on Modal. Do not use for vLLM or SGLang inference services.
+license: MIT
 ---
 
 # Modal Batch Processing
-
-## Overview
-
-Use this skill to choose the correct Modal batch primitive before writing code. Keep it focused on orchestration and batch execution patterns rather than model-serving internals.
-
-If the task is really about vLLM throughput, SGLang latency, OpenAI-compatible endpoints, or LLM cold starts, switch to `modal-llm-serving` instead of expanding this skill’s scope.
 
 ## Quick Start
 
@@ -17,15 +12,15 @@ If the task is really about vLLM throughput, SGLang latency, OpenAI-compatible e
 
 ```bash
 modal --version
-/Users/jmccall/.local/pipx/venvs/modal/bin/python -c "import modal,sys; print(modal.__version__); print(sys.executable)"
+python -c "import modal,sys; print(modal.__version__); print(sys.executable)"
 modal profile current
 ```
 
-- Do not assume `python3` can import `modal` just because the `modal` CLI exists.
-- In this repo, prefer `/Users/jmccall/.local/pipx/venvs/modal/bin/python` unless the active project venv already imports `modal`.
+- Do not assume the default `python` interpreter matches the environment behind the `modal` CLI.
+- Switch to the project virtualenv or the interpreter behind the installed `modal` CLI before writing examples or running scripts.
 - Use `with modal.enable_output():` around `with app.run():` when local provisioning logs or remote prints are needed for debugging.
 
-2. Pick the workflow before writing code.
+2. Pick the workflow before writing code and read the matching reference.
 
 ## Choose the Workflow
 
@@ -47,20 +42,10 @@ modal profile current
 - Prefer `.spawn` over `.map` when the caller needs a stable job ID or should return before the remote work finishes.
 - Treat `.spawn_map()` as detached fire-and-forget in Modal 1.3.4. The installed SDK docstring says programmatic result retrieval is not supported, so only use it when each task writes its output elsewhere.
 
-## Example Anchors
-
-- Use Modal’s document OCR jobs example as the reference pattern for deployed `.spawn` workflows that are triggered from an external application.
-- Use Modal’s batched Whisper example as the reference pattern for `@modal.batched` on `@app.cls`.
-- Use Modal’s vLLM throughput example only as a cross-reference when the workload is actually LLM throughput or serving; in that case, switch to `modal-llm-serving`.
-
 ## Validate
 
-- Run [scripts/smoke_test.py](scripts/smoke_test.py) with the Modal-importing interpreter to verify `.map`, `.starmap`, `.spawn`, `FunctionCall.from_id(...).get()`, and a CPU-only `@modal.batched` class method.
-- Run the validator after editing:
-
-```bash
-python3 /Users/jmccall/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/modal-batch-processing
-```
+- Run `npx skills add . --list` after editing the package metadata or skill descriptions.
+- Run [scripts/smoke_test.py](scripts/smoke_test.py) with a Python interpreter that can import `modal` when changing the workflow guidance or runnable artifact.
 
 ## References
 

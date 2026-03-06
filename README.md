@@ -1,44 +1,67 @@
 # Modal Skills
 
-A collection of [Claude Skills](https://claude.com/blog/complete-guide-to-building-skills-for-claude) for working with [Modal](https://modal.com) — the cloud platform for running AI workloads, sandboxed code execution, and GPU-accelerated inference.
+Anthropic-first [Claude Skills](https://claude.com/blog/complete-guide-to-building-skills-for-claude) for working with [Modal](https://modal.com/docs/). The repo packages reusable skills for Modal Sandboxes, LLM inference services, and batch-processing workflows so agents can pick the right Modal pattern without re-deriving it from scratch.
 
-These skills teach Claude how to create Modal Sandboxes, deploy LLM inference services, and follow Modal best practices, so you can describe what you want and get working Modal code.
+## Skills
 
-## Available Skills
+| Skill | Use when | Do not use when | Example prompt |
+| --- | --- | --- | --- |
+| [`modal-sandbox`](skills/modal-sandbox/) | You need secure code execution, a long-lived controller loop, a tunneled service, runtime file exchange, or snapshot-based restore flows on Modal. | The real task is LLM serving or batch job orchestration rather than sandbox lifecycle and control. | "Create a Modal Sandbox that runs a FastAPI app and give me the public URL." |
+| [`modal-llm-serving`](skills/modal-llm-serving/) | You need a Modal-hosted vLLM or SGLang inference service, an OpenAI-compatible API, cold-start tuning, low-latency routing, or throughput benchmarking. | The task is fine-tuning, RAG, training, or a broader ML pipeline outside inference serving. | "Deploy Qwen on Modal behind an OpenAI-compatible endpoint and tune cold starts." |
+| [`modal-batch-processing`](skills/modal-batch-processing/) | You need `.map`, `.starmap`, `.spawn`, `.spawn_map`, or `@modal.batched` to run CPU or GPU jobs on Modal. | The primary problem is HTTP LLM serving architecture rather than detached jobs, result collection, or dynamic batching. | "Design a Modal batch workflow that fans out OCR jobs and lets me poll results later." |
 
-| Skill | Description |
-|-------|-------------|
-| [modal-sandbox](skills/modal-sandbox/) | Create and control Modal Sandboxes for secure code execution, tunneled services, file exchange, and snapshot-based persistence. |
-| [modal-llm-serving](skills/modal-llm-serving/) | Serve open-weight LLMs on Modal with vLLM or SGLang — online APIs, cold-start reduction, low-latency, and batch inference. |
+## Which Skill Should I Use?
 
-## Installation
+- Choose `modal-sandbox` when the core problem is interactive execution, stateful sandbox control, tunnels, or filesystem and snapshot handling.
+- Choose `modal-llm-serving` when the core problem is inference serving with vLLM or SGLang, including API shape, GPU sizing, latency, or cold starts.
+- Choose `modal-batch-processing` when the core problem is job orchestration, fan-out, detached runs, result gathering, retries, or dynamic batching.
 
-### From GitHub
+## Install From GitHub
 
-Install a specific skill:
-
-```bash
-npx skills add <owner>/<repo> --skill modal-sandbox
-```
-
-Or install from the skill subdirectory directly:
+List the published skills before installing anything:
 
 ```bash
-npx skills add https://github.com/<owner>/<repo>/tree/main/skills/modal-sandbox
+npx skills add https://github.com/jamesrobmccall/modal_skills --list
 ```
 
-### Local Discovery
+Install one skill:
 
-Clone the repo and list available skills:
+```bash
+npx skills add https://github.com/jamesrobmccall/modal_skills --skill modal-sandbox
+npx skills add https://github.com/jamesrobmccall/modal_skills --skill modal-llm-serving
+npx skills add https://github.com/jamesrobmccall/modal_skills --skill modal-batch-processing
+```
+
+Install one skill for Claude Code explicitly:
+
+```bash
+npx skills add https://github.com/jamesrobmccall/modal_skills --skill modal-sandbox --agent claude-code
+```
+
+Install all skills:
+
+```bash
+npx skills add https://github.com/jamesrobmccall/modal_skills --skill '*'
+```
+
+Install all skills globally without prompts:
+
+```bash
+npx skills add https://github.com/jamesrobmccall/modal_skills --skill '*' --agent claude-code -g -y
+```
+
+## Develop Locally
+
+List the skills in the checked-out repo:
 
 ```bash
 npx skills add . --list
 ```
 
-List a specific skill:
+Install a local copy of one skill into Claude Code while iterating:
 
 ```bash
-npx skills add ./skills/modal-sandbox --list
+npx skills add . --skill modal-sandbox --agent claude-code
 ```
 
 ## Repository Layout
@@ -46,24 +69,22 @@ npx skills add ./skills/modal-sandbox --list
 ```text
 skills/
   <skill-name>/
-    SKILL.md          # Core instructions with YAML frontmatter
-    agents/           # Agent interface configuration
-    references/       # Detailed documentation loaded on-demand
-    scripts/          # Executable examples and tests
+    SKILL.md
+    agents/openai.yaml
+    references/
+    scripts/
 ```
 
 ## Contributing
 
-To add a new skill:
+Keep skill folders machine-facing and the root README human-facing.
 
-1. Create a new directory under `skills/<skill-name>/` using kebab-case naming.
-2. Add a `SKILL.md` with valid YAML frontmatter (`name`, `description`, `license`).
-3. Put detailed documentation in `references/` to keep `SKILL.md` under 5,000 words.
-4. Add runnable examples or tests in `scripts/`.
-5. Add an agent interface file in `agents/` (see existing skills for the format).
-6. Verify discovery with `npx skills add . --list` before opening a PR.
-
-See the [Anthropic skill creation guide](https://claude.com/blog/complete-guide-to-building-skills-for-claude) for best practices on writing effective skills.
+- Use Anthropic-style frontmatter in `SKILL.md`: `name`, `description`, `license`.
+- Keep `SKILL.md` short and procedural. Put variant-specific detail, examples, and troubleshooting in `references/`.
+- Add `scripts/` only when runnable artifacts or deterministic helpers make repeated use materially better.
+- Keep `agents/openai.yaml` aligned with the skill: `display_name`, `short_description`, `default_prompt`, and concise tags.
+- Validate discovery with `npx skills add . --list` before opening a PR.
+- Re-run the relevant script in `scripts/` when you change an executable example or workflow artifact.
 
 ## License
 

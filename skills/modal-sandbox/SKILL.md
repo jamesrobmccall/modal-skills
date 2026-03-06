@@ -1,16 +1,10 @@
 ---
 name: modal-sandbox
-description: Create and control Modal Sandboxes for secure code execution, long-lived controller processes, tunneled services, file exchange, and snapshot-based persistence. Use when creating, attaching to, debugging, or restoring a Modal Sandbox, or wiring one into an agent or code-interpreter workflow.
+description: Create, attach to, debug, and persist Modal Sandboxes for secure code execution, long-lived controller loops, tunneled services, runtime file exchange, and snapshot-based restore flows. Use for sandbox lifecycle, `exec(...)`, tunnels, Volumes, or snapshot workflows on Modal.
 license: MIT
-metadata:
-  version: "0.1.0"
 ---
 
 # Modal Sandbox
-
-## Overview
-
-Use this skill to create and operate Modal Sandboxes from Python. Prefer the Python SDK for provisioning and control, and use the CLI only to inspect or attach to an existing sandbox.
 
 ## Quick Start
 
@@ -18,10 +12,10 @@ Use this skill to create and operate Modal Sandboxes from Python. Prefer the Pyt
 
 ```bash
 modal --version
-<chosen-python> -c "import modal; print(modal.__version__)"
+python -c "import modal,sys; print(modal.__version__); print(sys.executable)"
 ```
 
-- Do not assume `python3` can import `modal` just because the `modal` CLI exists.
+- Do not assume the default `python` or `python3` interpreter can import `modal` just because the `modal` CLI exists.
 - Use the interpreter from the active Modal environment, project venv, or the environment behind the installed CLI.
 - Do not look for a `modal sandbox` subcommand. Use `modal shell <sandbox_id>` for direct access and `modal container ...` only for generic container inspection.
 - Wrap sandbox creation in `with modal.enable_output():` when you want local image-build and provisioning logs.
@@ -46,121 +40,22 @@ sandbox = modal.Sandbox.create("sh", "-lc", "sleep 300", app=app)
 - Use Volumes or CloudBucketMounts for persisted or shared files, and snapshots for restore flows; read [references/files-and-persistence.md](references/files-and-persistence.md) and [references/snapshots.md](references/snapshots.md).
 - Reattach to a live sandbox with `Sandbox.from_id(...)` or `Sandbox.from_name(...)` instead of creating duplicates.
 
-## Create or Reattach
+## Default Rules
 
-- Use the Python SDK as the authoritative create/control surface.
-- Use `modal.App.lookup(..., create_if_missing=True)` before `modal.Sandbox.create(...)` when creating from local code.
-- Set lifecycle limits deliberately:
-  - Treat the default sandbox lifetime as 5 minutes.
-  - Set `timeout` up to 24 hours when the workload needs more time.
-  - Set `idle_timeout` when the sandbox should terminate after inactivity.
-- Name a sandbox only when you need a singleton per project or session. `Sandbox.from_name(...)` only works for a currently running named sandbox on a deployed app.
-- Use `Sandbox.from_id(...)` when the object ID is already known.
-- Use `detach()` after finishing interaction with a sandbox that should keep running.
-- Use `terminate()` when the sandbox should stop now.
-- Use CLI interop only for debugging or direct access:
+- Create and control sandboxes through the Python SDK. Use `modal.App.lookup(..., create_if_missing=True)` before `modal.Sandbox.create(...)` when provisioning from local code.
+- Set lifecycle limits deliberately. Treat the default sandbox lifetime as 5 minutes, raise `timeout` up to 24 hours when needed, and set `idle_timeout` when inactivity should shut the sandbox down.
+- Reattach with `Sandbox.from_id(...)` or `Sandbox.from_name(...)` instead of creating duplicates. Name sandboxes only when you truly need a singleton on a deployed app.
+- Use `Sandbox.exec(...)` as the default execution primitive. Read `stdout` and `stderr` from the returned `ContainerProcess`, use `bufsize=1` for line-oriented loops, and set `pty=True` only for commands that genuinely need a TTY.
+- Keep one long-lived controller process when the task needs conversational state or repeated back-and-forth over `stdin` and `stdout`.
+- Open only the ports the task actually needs. Poll `sandbox.tunnels()` for readiness, and use `block_network=True`, `cidr_allowlist=[...]`, or `create_connect_token()` when the service should be restricted.
+- Bake static inputs into the image at build time, and use Volumes or CloudBucketMounts for files that must outlive one sandbox or be shared across runs.
+- Prefer filesystem or directory snapshots for restore flows. Use memory snapshots only when in-memory process state matters enough to justify their current limitations.
+- Use `detach()` when the sandbox should keep running after the client disconnects, and `terminate()` when the sandbox should stop immediately.
 
-```bash
-modal shell sb-abc123
-```
+## Validate
 
-## Run Commands
-
-- Treat `Sandbox.exec(...)` as the default execution primitive.
-- Expect `Sandbox.exec(...)` to return a `ContainerProcess` with `stdin`, `stdout`, `stderr`, `wait()`, and `returncode`.
-- Use `stdout.read()` and `stderr.read()` after completion when you want the full output.
-- Iterate over `stdout` or `stderr` for streaming output.
-- Use `bufsize=1` for line-oriented controller loops that exchange JSON or REPL-style messages.
-- Use `timeout=` on `exec(...)` to bound command runtime separately from sandbox lifetime.
-- Pass `pty=True` only when a command genuinely requires a TTY.
-- Keep one controller process running inside the sandbox when the task needs stateful back-and-forth over `stdin` and `stdout`.
-- Expect sparse Modal logs when the sandbox's long-lived command is quiet, such as `sleep 300`.
-- If you want logs visible in `modal app logs` or the Modal dashboard, keep a long-lived process that writes to `stdout` or `stderr`, such as a web server or controller process.
-- Treat `exec(...)` output primarily as process output to read from the returned streams; tee it into your own logs if the task needs durable log visibility outside the caller.
-
-## Expose Services
-
-- Open only the required ports with `encrypted_ports`, `unencrypted_ports`, or `h2_ports`.
-- Retrieve public URLs with `sandbox.tunnels()`.
-- Poll for readiness from outside the sandbox before declaring the service healthy.
-- Use `block_network=True` to disable outbound network access completely.
-- Use `cidr_allowlist=[...]` when the sandbox needs restricted outbound egress instead of unrestricted Internet access.
-- Use `create_connect_token()` only when the service needs authenticated HTTP connections routed through Modal's proxy.
-
-## Work With Files
-
-- Use `Image.add_local_file(...)` or `Image.add_local_dir(...)` when local inputs should be baked into the image at build time.
-- Use Volumes or CloudBucketMounts when files must outlive one sandbox or be shared across sandboxes.
-- Use `open()`, `ls()`, `mkdir()`, and `rm()` on the `Sandbox` object for runtime file access.
-- Prefer Volumes for controller loops that must preserve user work across sandbox restarts.
-- Remember that the direct filesystem API is alpha and best suited to lightweight runtime reads and writes.
-- Remember that Volume writes generally sync back on termination unless you explicitly use the relevant sync mechanism; CloudBucketMounts sync automatically.
-
-## Persist State
-
-- Prefer `snapshot_filesystem()` when the whole filesystem should be cloned or restored.
-- Use `snapshot_directory()` plus `mount_image()` when only one directory needs to be carried forward.
-- Treat directory snapshots as durable but not permanent; current docs say they persist for 30 days after last use.
-- Treat memory snapshots as advanced-only:
-  - Treat them as alpha.
-  - Expect 7-day expiration.
-  - Expect the source sandbox to terminate when the snapshot is taken.
-  - Avoid them with GPUs.
-  - Avoid them while any `Sandbox.exec` process is still running.
-  - Avoid relying on background processes launched via `exec` to restore cleanly.
-- Prefer filesystem snapshots unless the task explicitly requires in-memory process state.
-
-## Examples
-
-### Run a Python Script in a Sandbox
-
-User says: "Run this Python script in a sandbox."
-
-1. Create an app with `modal.App.lookup("script-runner", create_if_missing=True)`.
-2. Create a sandbox with `modal.Sandbox.create("sleep", "300", app=app)`.
-3. Upload the script with `sandbox.open("/tmp/script.py", "w")`.
-4. Execute with `sandbox.exec("python", "/tmp/script.py")` and read `stdout`.
-5. Terminate the sandbox.
-
-Result: Script output returned to the user.
-
-### Expose a Web Service From a Sandbox
-
-User says: "Start a web server in a sandbox and give me the URL."
-
-1. Create a sandbox with `encrypted_ports=[8080]`.
-2. Exec the server process inside the sandbox.
-3. Poll `sandbox.tunnels()` until a URL is available.
-4. Return the public tunnel URL to the user.
-
-Result: A publicly reachable URL serving traffic from the sandbox.
-
-### Snapshot and Restore a Sandbox
-
-User says: "Save my sandbox state so I can resume later."
-
-1. Call `sandbox.snapshot_filesystem()` to capture the full filesystem.
-2. Store the returned image reference.
-3. Later, create a new sandbox using the snapshot as its base image.
-
-Result: A new sandbox that picks up exactly where the previous one left off.
-
-## Troubleshooting
-
-### `modal` CLI not found or `import modal` fails
-Verify Modal is installed in the active Python environment. The `modal` CLI and the `modal` Python package may live in different environments.
-
-### Sandbox terminates unexpectedly
-The default sandbox lifetime is 5 minutes. Set `timeout` explicitly on `Sandbox.create(...)` for longer workloads (up to 24 hours).
-
-### `Sandbox.from_name(...)` returns nothing
-`from_name` only finds a currently running named sandbox on a deployed app. If the sandbox has terminated, create a new one.
-
-### Tunnel URL not available
-Poll `sandbox.tunnels()` — the URL may take a moment after the service starts. Ensure the correct port was passed to `encrypted_ports` or `unencrypted_ports`.
-
-### File writes not persisted after sandbox termination
-Use Volumes for data that must outlive a single sandbox. The direct filesystem API (`sandbox.open()`, etc.) is scoped to the sandbox's lifetime.
+- Run `npx skills add . --list` after editing the package metadata or skill descriptions.
+- Run [scripts/smoke_test.py](scripts/smoke_test.py) with a Python interpreter that can import `modal` when changing lifecycle, `exec(...)`, or file-IO guidance.
 
 ## References
 
@@ -168,4 +63,5 @@ Use Volumes for data that must outlive a single sandbox. The direct filesystem A
 - Read [references/networking-and-tunnels.md](references/networking-and-tunnels.md) for tunnels, network controls, and service exposure.
 - Read [references/files-and-persistence.md](references/files-and-persistence.md) for build-time uploads, runtime file IO, Volumes, and persistence tradeoffs.
 - Read [references/snapshots.md](references/snapshots.md) for snapshot selection, limitations, and restore patterns.
-- Read [references/example-patterns.md](references/example-patterns.md) for distilled example workflows.
+- Read [references/example-patterns.md](references/example-patterns.md) for distilled sandbox workflow templates.
+- Read [references/troubleshooting.md](references/troubleshooting.md) for common failure modes and recovery paths.
