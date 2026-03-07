@@ -1,0 +1,107 @@
+{
+  "expectations": [
+    {
+      "text": "The response explains how to create a filesystem snapshot using the Modal SDK (e.g., sandbox.snapshot_filesystem())",
+      "passed": true,
+      "evidence": "The solution leads with 'Modal Sandboxes support filesystem snapshots via the `Sandbox.snapshot_filesystem()` method' and uses the method in every code example, including `snapshot_vol = sb.snapshot_filesystem()` and `checkpoint_vol = sb1.snapshot_filesystem()`."
+    },
+    {
+      "text": "The response explains that the snapshot captures filesystem state, not in-memory process state",
+      "passed": false,
+      "evidence": "The solution says snapshots are 'point-in-time' and capture 'the current filesystem state', but never explicitly states that in-memory process state (heap, stack, running process context) is NOT captured. A reader could easily infer the snapshot is equivalent to a full process checkpoint. The distinction is implied but not stated."
+    },
+    {
+      "text": "The response shows how to restore from a snapshot by passing it to a new Sandbox.create() call",
+      "passed": true,
+      "evidence": "Multiple examples show `modal.Sandbox.create(..., volumes={\"/workspace\": snapshot_vol}, ...)` as the restore mechanism. Example 2 is dedicated to this pattern, and it appears again in Examples 3 and 4."
+    },
+    {
+      "text": "The response mentions key limitations or caveats of filesystem snapshots",
+      "passed": true,
+      "evidence": "The 'Important Notes and Limitations' section lists five caveats: volumes are read-write by default when mounted (writes don't affect the original snapshot), snapshot timing, volume persistence, named volumes for retrieval, and mid-run snapshotting via threads."
+    },
+    {
+      "text": "The code or explanation references the correct Modal SDK method for creating a snapshot",
+      "passed": true,
+      "evidence": "`sandbox.snapshot_filesystem()` is used consistently throughout. The summary table confirms: 'Checkpoint | Snapshot filesystem | `sandbox.snapshot_filesystem()` -> returns `modal.Volume`'. The method name and return type are stated clearly and used in runnable code."
+    },
+    {
+      "text": "The response distinguishes between filesystem snapshots and memory snapshots and when each applies",
+      "passed": false,
+      "evidence": "The response never mentions memory snapshots at all. There is no discussion of in-memory checkpointing, process-level snapshots, or when you would use one vs the other. The entire response focuses exclusively on filesystem snapshots."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 2,
+    "total": 6,
+    "pass_rate": 0.67
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Read": 0,
+      "Write": 3,
+      "Bash": 0,
+      "Glob": 0,
+      "Grep": 0,
+      "ToolSearch": 1
+    },
+    "total_tool_calls": 4,
+    "total_steps": 4,
+    "errors_encountered": 0,
+    "output_chars": 6200,
+    "transcript_chars": 1650
+  },
+  "timing": {
+    "executor_duration_seconds": 64.4,
+    "grader_duration_seconds": null,
+    "total_duration_seconds": 64.4
+  },
+  "claims": [
+    {
+      "claim": "`snapshot_filesystem()` returns a `modal.Volume`",
+      "type": "factual",
+      "verified": false,
+      "evidence": "The executor stated this from internal knowledge without consulting any Modal documentation. The claim is plausible and the API design makes sense, but it could not be verified from available outputs. If the return type is wrong (e.g., it returns a snapshot object, not a Volume), the restore pattern using `volumes={...}` would also be wrong."
+    },
+    {
+      "claim": "Sandboxes do not need to be stopped to take a snapshot",
+      "type": "factual",
+      "verified": false,
+      "evidence": "Stated in the transcript's 'Key Knowledge Applied' section and reiterated in the solution's Key Concepts and Limitations. Plausible but sourced solely from the executor's internal knowledge with no documentation consulted."
+    },
+    {
+      "claim": "The solution was answered entirely from internal knowledge with no documentation reads",
+      "type": "process",
+      "verified": true,
+      "evidence": "metrics.json confirms Read: 0, Bash: 0 — no files were read or commands run. The transcript states 'I answered entirely from my general knowledge of the Modal SDK, without reading any documentation files or skill guides.'"
+    },
+    {
+      "claim": "The returned Volume can be mounted into a new Sandbox via the `volumes` parameter",
+      "type": "factual",
+      "verified": false,
+      "evidence": "This restore pattern is central to the solution but sourced from internal knowledge only. The `volumes` parameter on `Sandbox.create()` is a known Modal API feature, but whether a snapshot volume can be used this way directly is unverified."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "The response distinguishes between filesystem snapshots and memory snapshots and when each applies",
+        "reason": "This expectation fails here, but it may be an unfair expectation if Modal does not actually offer memory-level snapshots as a distinct feature. If Modal only supports filesystem snapshots and there is no 'memory snapshot' API, asking for a distinction between the two cannot be satisfied correctly. The eval author should verify whether Modal exposes a memory checkpoint API before keeping this assertion."
+      },
+      {
+        "assertion": "The code or explanation references the correct Modal SDK method for creating a snapshot",
+        "reason": "This passes, but it's a weak check — it only verifies the method name appears. A stronger assertion would verify the return type and the restore pattern are correct (e.g., that snapshot_filesystem() actually returns something mountable as a volume). The executor answered from internal knowledge with no doc lookup, so correctness of the API shape is unverified."
+      },
+      {
+        "reason": "No assertion checks whether the response is factually accurate against actual Modal documentation. The executor explicitly stated it relied on internal knowledge without reading any docs. Given that Modal's APIs evolve rapidly, a hallucinated or stale API shape would pass all current assertions. Consider adding an assertion like 'The API methods cited match the current Modal SDK documentation' and having the executor consult the docs."
+      }
+    ],
+    "overall": "The evals catch the most important structural outcomes (method name, restore pattern, limitations, filesystem-vs-process distinction), but they don't guard against confidently wrong API details. The executor produced a polished answer from memory — if snapshot_filesystem() doesn't return a modal.Volume or the volumes parameter doesn't accept snapshots, the entire answer is wrong yet would pass 4 of 6 assertions."
+  }
+}

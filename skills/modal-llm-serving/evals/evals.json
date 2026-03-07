@@ -1,0 +1,49 @@
+{
+  "skill_name": "modal-llm-serving",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Deploy Llama 3.1 8B on Modal with an OpenAI-compatible API that I can point my existing OpenAI SDK client at",
+      "expected_output": "Working Python code that deploys Llama 3.1 8B on Modal using vLLM and @modal.web_server, exposing an OpenAI-compatible /v1/chat/completions endpoint with a pinned model revision, Volume-cached weights, and a local entrypoint or smoke-test client",
+      "files": [],
+      "expectations": [
+        "The code uses vLLM as the serving engine",
+        "The code uses @modal.web_server to expose the HTTP endpoint",
+        "The endpoint is OpenAI-compatible (serves /v1/chat/completions or equivalent)",
+        "The code pins a specific model revision (e.g., a commit SHA or tag) when pulling from HuggingFace",
+        "The code stores model weights in a Modal Volume to avoid re-downloading on cold starts",
+        "The code includes a readiness check, health check, or smoke-test client",
+        "The code sets HF_XET_HIGH_PERFORMANCE=1 or equivalent to speed up Hub downloads"
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "My vLLM deployment on Modal is cold-starting in 3+ minutes, which is too slow for my bursty API traffic — what are my options?",
+      "expected_output": "A clear explanation of cold-start reduction techniques available on Modal for vLLM, covering at least memory snapshots (sleep/wake), keep-warm containers, and Volume-cached weights, with guidance on tradeoffs and when each applies",
+      "files": [],
+      "expectations": [
+        "The response explains the memory snapshot (sleep/wake) approach for cold-start reduction",
+        "The response explains the tradeoffs of using memory snapshots (complexity, limitations)",
+        "The response mentions keeping containers warm via min_containers or similar knobs",
+        "The response addresses Volume-cached weights as a prerequisite baseline",
+        "The response provides enough signal to choose between approaches based on the use case",
+        "The response acknowledges that snapshot-based approaches add operational complexity and are only warranted when cold-start latency is a first-class requirement"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I need to run offline batch inference on 50,000 documents using Qwen3 on Modal — optimize for throughput, not latency",
+      "expected_output": "Working Python code (or adaptation of qwen3_throughput.py) using the vLLM Python LLM interface inside a Modal function/class, with a local entrypoint that fans out documents, collects results, and notes throughput-oriented knobs",
+      "files": [],
+      "expectations": [
+        "The code uses the vLLM Python LLM interface (not the HTTP API) for offline/batch inference",
+        "The code does not use @modal.web_server since this is offline batch, not HTTP serving",
+        "The code fans out work across Modal workers (e.g., via .map or batched inputs per container)",
+        "The code includes a local_entrypoint or equivalent to submit the 50,000 documents",
+        "The code pins a specific Qwen3 model revision",
+        "The code stores model weights in a Modal Volume",
+        "The response or comments explain at least one throughput-oriented tuning knob (e.g., max_num_seqs, tensor parallelism, or chunked prefill)"
+      ]
+    }
+  ]
+}

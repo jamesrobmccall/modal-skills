@@ -1,0 +1,110 @@
+{
+  "expectations": [
+    {
+      "text": "The code uses the vLLM Python LLM interface (not the HTTP API) for offline/batch inference",
+      "passed": true,
+      "evidence": "solution.py line 183: `self.llm = vllm.LLM(model=MODEL_NAME, revision=MODEL_REVISION, tokenizer_revision=MODEL_REVISION, **VLLM_KWARGS)` inside a `@modal.enter()` method on a `@app.cls`. The transcript also confirms: 'vLLM Python LLM interface (not HTTP) — vllm.LLM inside @app.cls'."
+    },
+    {
+      "text": "The code does not use @modal.web_server since this is offline batch, not HTTP serving",
+      "passed": true,
+      "evidence": "Neither `web_server` nor `@modal.web_endpoint` appears anywhere in solution.py. The architecture uses `@app.cls` with a `@modal.method()` called via `.map`, which is the correct offline batch pattern."
+    },
+    {
+      "text": "The code fans out work across Modal workers (e.g., via .map or batched inputs per container)",
+      "passed": true,
+      "evidence": "solution.py lines 349-356: `worker.process_shard.map(shard_ids, doc_starts, doc_counts, kwargs={...})` fans out 25 shards (for 50k docs at 2000 per shard) to concurrent Modal containers, each with its own H100 and warm vLLM engine."
+    },
+    {
+      "text": "The code includes a local_entrypoint or equivalent to submit the 50,000 documents",
+      "passed": true,
+      "evidence": "solution.py line 290: `@app.local_entrypoint()` decorator on `def main(total_docs: int = TOTAL_DOCS, ...)` where `TOTAL_DOCS = 50_000` (line 44). The entrypoint builds shard assignments and fans out via `.map`."
+    },
+    {
+      "text": "The code pins a specific Qwen3 model revision",
+      "passed": true,
+      "evidence": "solution.py line 37: `MODEL_REVISION = \"35af3b1c0ad30c8285fa8be5a5eb53e7d9e2ab7a\"` is passed to `vllm.LLM` as both `revision=MODEL_REVISION` and `tokenizer_revision=MODEL_REVISION` (lines 185-186). A comment explains how to verify/update it."
+    },
+    {
+      "text": "The code stores model weights in a Modal Volume",
+      "passed": true,
+      "evidence": "solution.py lines 71-74: `hf_cache = modal.Volume.from_name(\"qwen3-8b-fp8-huggingface-cache\", create_if_missing=True)` mounted at `/root/.cache/huggingface` in the `@app.cls` volumes dict (line 168). A second volume `vllm_cache` caches compilation artifacts."
+    },
+    {
+      "text": "The response or comments explain at least one throughput-oriented tuning knob (e.g., max_num_seqs, tensor parallelism, or chunked prefill)",
+      "passed": true,
+      "evidence": "The transcript (Step 5) contains a full table of throughput knobs with rationale: `tensor_parallel_size=1`, `async_scheduling=True`, `attention_backend=flashinfer`, `gpu_memory_utilization=0.93`, `max_model_len=4096`. solution.py inline comments also explain each: e.g., line 88: `# best throughput for offline batches`, line 89: `# overlaps scheduling with execution`, line 90: `# leave headroom; increase once workload is stable`."
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Read": 6,
+      "Write": 3,
+      "Bash": 3,
+      "Glob": 0,
+      "Grep": 0
+    },
+    "total_tool_calls": 12,
+    "total_steps": 6,
+    "errors_encountered": 1,
+    "output_chars": 13814,
+    "transcript_chars": 6557
+  },
+  "timing": {
+    "executor_duration_seconds": 233.7,
+    "grader_duration_seconds": null,
+    "total_duration_seconds": 233.7
+  },
+  "claims": [
+    {
+      "claim": "Revision pinned to `35af3b1c0ad30c8285fa8be5a5eb53e7d9e2ab7a` — user should verify against HF hub",
+      "type": "factual",
+      "verified": false,
+      "evidence": "The revision hash is present and used correctly in code, but the grader cannot verify it matches the actual current HF hub sha for Qwen/Qwen3-8B-FP8. The code correctly advises the user to run `huggingface-cli api Qwen/Qwen3-8B-FP8 --field sha` to confirm."
+    },
+    {
+      "claim": "Qwen3-8B-FP8 fits on a single H100 with a healthy KV cache at `gpu_memory_utilization=0.93`",
+      "type": "quality",
+      "verified": true,
+      "evidence": "Qwen3-8B in FP8 is approximately 8GB of weights; an 80GB H100 provides ample headroom for KV cache even at 0.93 utilization. The design choice is sound."
+    },
+    {
+      "claim": "`.map` launches all 25 containers in parallel",
+      "type": "process",
+      "verified": true,
+      "evidence": "Modal's `.map` does fan out to concurrent containers subject to account concurrency limits. The code correctly uses `.map` for parallel execution. Actual parallelism depends on Modal account GPU quota, but the code is correct."
+    },
+    {
+      "claim": "The script processed 50k documents correctly",
+      "type": "quality",
+      "verified": false,
+      "evidence": "The script was not actually run against Modal infrastructure — this is a static code generation eval. The code is structurally correct but execution was not verified end-to-end."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "reason": "All 7 expectations pass, and the solution is genuinely high quality — but no assertion checks that `revision=` and `tokenizer_revision=` are both passed to `vllm.LLM` (not just that a revision constant exists). A solution that defines `MODEL_REVISION` but forgets to pass it to the constructor would still pass the pinning assertion. Consider: 'The revision constant is passed as both `revision=` and `tokenizer_revision=` arguments to `vllm.LLM`'."
+      },
+      {
+        "reason": "No assertion checks whether the code includes engine warmup before timing production batches, which is a key correctness concern for throughput benchmarks. The reference script and skill guide both emphasize this. The solution does implement warmup (lines 192-197), and this went unverified by the evals."
+      },
+      {
+        "assertion": "The response or comments explain at least one throughput-oriented tuning knob (e.g., max_num_seqs, tensor parallelism, or chunked prefill)",
+        "reason": "This assertion is easy to satisfy with a single inline comment. The solution provides a well-structured table with multiple knobs and rationale, but a minimal solution with one sentence would also pass. Consider requiring the explanation to address the actual knob value chosen relative to the workload (e.g., why tensor_parallel_size=1 for 8B FP8 on H100)."
+      }
+    ],
+    "overall": "Evals are well-targeted for the core correctness properties (offline interface, no HTTP server, fan-out, local_entrypoint, volume, revision pinning). Two gaps worth addressing: the revision-passing check and the warmup pattern."
+  }
+}

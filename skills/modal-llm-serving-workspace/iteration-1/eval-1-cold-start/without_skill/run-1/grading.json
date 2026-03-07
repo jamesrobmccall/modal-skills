@@ -1,0 +1,111 @@
+{
+  "expectations": [
+    {
+      "text": "The response explains the memory snapshot (sleep/wake) approach for cold-start reduction",
+      "passed": false,
+      "evidence": "The solution does not mention memory snapshots or a sleep/wake container lifecycle approach at all. It covers six strategies: baking weights into the image layer, keep_warm, container_idle_timeout, CUDA warmup in @modal.enter(), quantization, and tensor parallelism avoidance. None of these is the snapshot/restore pattern."
+    },
+    {
+      "text": "The response explains the tradeoffs of using memory snapshots (complexity, limitations)",
+      "passed": false,
+      "evidence": "Memory snapshots are never introduced in the response, so their tradeoffs are not discussed. This expectation cannot pass given the absence of the topic."
+    },
+    {
+      "text": "The response mentions keeping containers warm via min_containers or similar knobs",
+      "passed": true,
+      "evidence": "Option 2 in solution.md is dedicated to keep_warm: 'keep_warm=1  # always keep 1 container hot'. It includes code examples, tradeoff analysis (zero cold-start for warm replicas vs. idle GPU cost at ~$3-4/hr), and guidance on tuning container_idle_timeout alongside keep_warm."
+    },
+    {
+      "text": "The response addresses Volume-cached weights as a prerequisite baseline",
+      "passed": false,
+      "evidence": "The response uses image.run_function() to bake weights into the container image layer, not Modal Volumes. modal.Volume is not mentioned anywhere in the solution. These are distinct mechanisms: Volume-cached weights persist across container restarts without rebuilding the image; the image-baking approach requires an image rebuild to update weights. The expectation's specific prerequisite (Volume-cached weights) is not addressed."
+    },
+    {
+      "text": "The response provides enough signal to choose between approaches based on the use case",
+      "passed": true,
+      "evidence": "The 'Recommended Strategy for Bursty Traffic' section ranks all options in priority order with rationale. The summary table compares all six options across Cold-Start Impact, Cost Impact, and Complexity dimensions. The tradeoff sections under each option (Pro/Con lists) further support decision-making."
+    },
+    {
+      "text": "The response acknowledges that snapshot-based approaches add operational complexity and are only warranted when cold-start latency is a first-class requirement",
+      "passed": false,
+      "evidence": "Snapshot-based approaches are not discussed anywhere in the response, so this contextual acknowledgment is absent."
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 4,
+    "total": 6,
+    "pass_rate": 0.33
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Read": 0,
+      "Write": 3,
+      "Bash": 0,
+      "Glob": 0,
+      "Grep": 0
+    },
+    "total_tool_calls": 3,
+    "total_steps": 3,
+    "errors_encountered": 0,
+    "output_chars": 6842,
+    "transcript_chars": 2721
+  },
+  "timing": {
+    "executor_duration_seconds": 93.0,
+    "total_duration_seconds": 93.0
+  },
+  "claims": [
+    {
+      "claim": "Cold starts of 3+ minutes typically stem from three main bottlenecks: image pull, weight download, and vLLM engine init",
+      "type": "factual",
+      "verified": true,
+      "evidence": "This is an accurate characterization of the typical cold-start breakdown for GPU containers running vLLM."
+    },
+    {
+      "claim": "A 7B model in bfloat16 is ~14 GB; AWQ 4-bit reduces it to ~4 GB",
+      "type": "factual",
+      "verified": true,
+      "evidence": "7B parameters * 2 bytes (bfloat16) = ~14 GB is correct. AWQ 4-bit roughly halves twice (~3.5 GB), so ~4 GB is a reasonable approximation."
+    },
+    {
+      "claim": "With weights baked in and one warm container, initialization time drops from 3+ minutes to 30-60 seconds",
+      "type": "quality",
+      "verified": false,
+      "evidence": "This is stated as an approximation based on typical A100 benchmarks (noted in the transcript). Without empirical measurement it is unverifiable, but is a plausible estimate for vLLM engine init time excluding the download phase."
+    },
+    {
+      "claim": "A100 GPU costs approximately $3-4/hr on Modal",
+      "type": "factual",
+      "verified": false,
+      "evidence": "Modal pricing is not verifiable from the available outputs and changes over time. The figure is in the right ballpark for A100 compute but should be treated as approximate."
+    },
+    {
+      "claim": "hf_transfer (Rust-based parallel downloader) can reduce download phase from minutes to tens of seconds",
+      "type": "factual",
+      "verified": false,
+      "evidence": "Plausible claim, but no benchmark data is cited. hf_transfer is a real tool that does improve download speed, but exact speedup depends on network conditions and the worker environment."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "The response explains the memory snapshot (sleep/wake) approach for cold-start reduction",
+        "reason": "This expectation presupposes a specific technique (memory snapshots / sleep-wake lifecycle) that is a non-obvious, advanced Modal feature. Without_skill runs should not be expected to know about it unless it is widely documented. The eval is effectively testing whether the model happens to know a niche technique, which means a well-grounded general answer on cold-start reduction will always fail this expectation even if the advice is excellent. Consider whether this expectation belongs in a 'without_skill' baseline eval at all, or whether it should only apply to the 'with_skill' condition."
+      },
+      {
+        "assertion": "The response addresses Volume-cached weights as a prerequisite baseline",
+        "reason": "The solution correctly recommends image-layer weight baking as an alternative to Volume-cached weights, and for many use cases image baking is actually simpler. The framing of Volume caching as a 'prerequisite baseline' rather than one option among several may be too prescriptive. An assertion that checks 'the response distinguishes between weight-baking strategies and explains their tradeoffs' would be more discriminating and would capture both approaches."
+      },
+      {
+        "reason": "No expectation checks whether the response correctly identifies that keep_warm addresses only the warm replica — additional replicas during traffic spikes still cold-start. The solution does cover this ('Does not help when traffic spikes beyond the warm pool size'), but an explicit assertion would catch responses that oversell keep_warm as a complete solution."
+      }
+    ],
+    "overall": "Three of the four failing expectations hinge on a single absent topic (memory snapshots), which is a niche technique unlikely to be known without specific skill guidance. The eval as written sets a high bar for the without_skill baseline and may not fairly distinguish between a genuinely poor response and a good general response that lacks knowledge of a Modal-specific advanced feature. The keep_warm and signal-quality expectations are well-calibrated."
+  }
+}

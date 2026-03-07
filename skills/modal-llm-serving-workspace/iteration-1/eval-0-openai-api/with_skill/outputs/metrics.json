@@ -1,0 +1,15 @@
+{
+  "tool_calls": {
+    "Read": 5,
+    "Write": 3,
+    "Glob": 1,
+    "Grep": 0,
+    "Bash": 0
+  },
+  "total_tool_calls": 9,
+  "total_steps": 7,
+  "files_created": ["solution.py", "transcript.md", "metrics.json"],
+  "errors_encountered": 0,
+  "output_chars": 3674,
+  "transcript_chars": 2916
+}

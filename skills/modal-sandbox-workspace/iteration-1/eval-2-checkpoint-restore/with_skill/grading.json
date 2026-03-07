@@ -1,0 +1,106 @@
+{
+  "expectations": [
+    {
+      "text": "The response explains how to create a filesystem snapshot using the Modal SDK (e.g., sandbox.snapshot_filesystem())",
+      "passed": true,
+      "evidence": "solution.md overview and code both show `snapshot_image = sandbox.snapshot_filesystem()` with explanation: 'snapshot_filesystem() — captures the entire sandbox filesystem as a reusable Modal Image'"
+    },
+    {
+      "text": "The response explains that the snapshot captures filesystem state, not in-memory process state",
+      "passed": true,
+      "evidence": "The overview states snapshots capture 'filesystem state'. The limitations table states 'No background exec processes survive a snapshot/restore cycle', making explicit that in-memory process state is not preserved. The memory snapshots row is listed separately as 'Experimental only'."
+    },
+    {
+      "text": "The response shows how to restore from a snapshot by passing it to a new Sandbox.create() call",
+      "passed": true,
+      "evidence": "restore_and_resume() in solution.md calls `modal.Image.from_id(snapshot_id)` then passes `image=snapshot_image` to `modal.Sandbox.create(...)`, matching the documented restore pattern exactly."
+    },
+    {
+      "text": "The response mentions key limitations or caveats of filesystem snapshots",
+      "passed": true,
+      "evidence": "A dedicated 'Snapshot Limitations' table covers: 30-day retention, source sandbox continues running after snapshot, memory snapshots experimental with 7-day expiry, restore target must be a new sandbox, and background exec processes don't survive the cycle."
+    },
+    {
+      "text": "The code or explanation references the correct Modal SDK method for creating a snapshot",
+      "passed": true,
+      "evidence": "Both `sandbox.snapshot_filesystem()` (full sandbox) and `sandbox.snapshot_directory('/workspace')` (single directory) are used in working code examples with correct variable assignments and ID extraction via `.object_id`."
+    },
+    {
+      "text": "The response distinguishes between filesystem snapshots and memory snapshots and when each applies",
+      "passed": true,
+      "evidence": "The limitations table explicitly contrasts filesystem snapshots (stable, 30-day retention, non-destructive to source sandbox) against memory snapshots ('Experimental only; expire after 7 days; source sandbox terminates on snapshot; avoid with GPUs or running exec processes'). The 'When to Use Each Approach' table further guides readers toward filesystem vs directory snapshots vs Volumes by scenario."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Read": 5,
+      "Write": 3,
+      "Glob": 1,
+      "ToolSearch": 2
+    },
+    "total_tool_calls": 11,
+    "total_steps": 4,
+    "errors_encountered": 0,
+    "output_chars": 5821,
+    "transcript_chars": 2721
+  },
+  "timing": {
+    "executor_duration_seconds": 93.5,
+    "total_duration_seconds": 93.5
+  },
+  "claims": [
+    {
+      "claim": "Two stable snapshot APIs exist: snapshot_filesystem() and snapshot_directory(path)",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Both methods are used correctly in the code examples with consistent behavior described in solution.md and matching what the transcript says was found in references/snapshots.md"
+    },
+    {
+      "claim": "Snapshots persist for 30 days after last creation or use",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Stated in both the overview and the limitations table; consistent with what transcript Step 2 reports from snapshots.md"
+    },
+    {
+      "claim": "modal.Image.from_id(snapshot_id) is the correct pattern for reconstructing a snapshot image",
+      "type": "process",
+      "verified": true,
+      "evidence": "Used in both restore_and_resume() and restore_from_directory_snapshot(); the transcript notes this was deliberately chosen as 'the correct pattern for restoring from external durable state'"
+    },
+    {
+      "claim": "Memory snapshots are experimental and source sandbox terminates on snapshot",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Stated in the limitations table; consistent with transcript Step 2 findings from snapshots.md. Cannot independently verify against Modal docs, but internally consistent."
+    },
+    {
+      "claim": "mount_image is used for directory snapshot restore",
+      "type": "process",
+      "verified": true,
+      "evidence": "restore_from_directory_snapshot() uses `modal.Image.mount_image('/workspace', dir_snapshot_image)` passed via the mounts parameter — consistent with the pattern described in the transcript"
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "The response distinguishes between filesystem snapshots and memory snapshots and when each applies",
+        "reason": "The assertion passes but is weakly satisfied. The response lists memory snapshots only in a limitations/caveats context and provides no positive use case for them (which is arguably correct per the skill's guidance to avoid them for standard workflows). A tighter assertion would specify that the response should explain what memory snapshots are for and why they are avoided, rather than just that a distinction exists."
+      },
+      {
+        "reason": "No assertion checks whether the restore code correctly uses the snapshot image as the sandbox root image (image= parameter to Sandbox.create) vs as a mount. The distinction matters: using it as the image= argument restores the full filesystem, while using mounts= only overlays a directory. The response handles both cases correctly, but no expectation verifies this critical correctness detail."
+      }
+    ],
+    "overall": "Evals are solid and cover the main outcomes. The two gaps worth addressing: tighten the memory-snapshot distinction assertion to require explanation of when memory snapshots would apply (even if the answer is 'rarely'), and add an assertion that verifies the snapshot is passed as the image= argument to Sandbox.create() for full filesystem restore (not just that Sandbox.create() is called)."
+  }
+}

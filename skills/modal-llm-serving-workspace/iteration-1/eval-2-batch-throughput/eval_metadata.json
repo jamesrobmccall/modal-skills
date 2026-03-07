@@ -1,0 +1,14 @@
+{
+  "eval_id": 2,
+  "eval_name": "qwen3-offline-batch-throughput",
+  "prompt": "I need to run offline batch inference on 50,000 documents using Qwen3 on Modal — optimize for throughput, not latency",
+  "assertions": [
+    "The code uses the vLLM Python LLM interface (not the HTTP API) for offline/batch inference",
+    "The code does not use @modal.web_server since this is offline batch, not HTTP serving",
+    "The code fans out work across Modal workers (e.g., via .map or batched inputs per container)",
+    "The code includes a local_entrypoint or equivalent to submit the 50,000 documents",
+    "The code pins a specific Qwen3 model revision",
+    "The code stores model weights in a Modal Volume",
+    "The response or comments explain at least one throughput-oriented tuning knob (e.g., max_num_seqs, tensor parallelism, or chunked prefill)"
+  ]
+}
