@@ -6,6 +6,7 @@ Use this reference for single-node LLM supervised fine-tuning on Modal.
 
 - Start from the Modal [Unsloth fine-tuning example](https://modal.com/docs/examples/unsloth_finetune).
 - Prefer Unsloth or a PEFT-based workflow for SFT, LoRA, and QLoRA on a single node.
+- Prefer plain Transformers or TRL plus PEFT for the first smoke test, for tiny public models, or when Unsloth support for the chosen model family is uncertain. Use Unsloth when its model support and memory savings are clearly useful.
 - Default to LoRA or QLoRA for cost-sensitive work unless the user explicitly requires full fine-tuning.
 
 ## What To Confirm
@@ -26,6 +27,7 @@ Use this reference for single-node LLM supervised fine-tuning on Modal.
 
 ## Practical Defaults
 
+- Start with a tiny public instruct model and 5 to 10 training steps to validate the training loop before switching to the real base model and dataset.
 - Use LoRA target modules that match the model family rather than assuming one universal list.
 - Keep batch size, gradient accumulation, sequence length, and quantization choices tied to the chosen GPU memory budget.
 - Save often enough to resume usefully, but not so often that checkpointing dominates runtime.

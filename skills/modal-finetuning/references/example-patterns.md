@@ -5,6 +5,7 @@ Use these as compact adaptation templates. Pick one and specialize it to the use
 ## Pattern 1: Single-GPU LLM QLoRA
 
 - Base the workflow on the Unsloth example.
+- For the first smoke test, swap in a tiny public instruct model and plain PEFT if that is the fastest way to validate model loading, dataset formatting, checkpoints, and a saved sample generation.
 - Mount one Volume for model cache and one for checkpoints.
 - Use Secrets for Hugging Face and optional Weights & Biases logging.
 - Expose model name, dataset name, sequence length, LoRA settings, and max steps via `@app.local_entrypoint`.

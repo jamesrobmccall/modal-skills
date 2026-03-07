@@ -30,10 +30,11 @@ modal profile current
 ## Default Rules
 
 - Prefer PEFT methods such as LoRA or QLoRA before full fine-tuning unless the user explicitly needs weight updates across the whole model.
+- Start with a cheap smoke test on a tiny ungated model and tiny dataset before a long or expensive run. Use it to validate image builds, trainer API compatibility, dataset formatting, checkpoint paths, and one saved sample artifact.
 - Persist datasets, pretrained weights, checkpoints, merged adapters, and sample outputs in Modal Volumes. Do not rely on ephemeral container disk for anything that must survive retries or later inspection.
 - Keep Hugging Face, Weights & Biases, Roboflow, and similar credentials in Modal Secrets.
 - Design long runs so they can resume from checkpoints. Add retries only when resume behavior is correct.
-- Set `timeout=` intentionally for long training jobs and keep `max_inputs=1` for stateful, long-running training containers unless there is a clear reason not to.
+- Set `timeout=` intentionally for long training jobs and keep one stateful container per training run by default. Prefer `single_use_containers=True` when retries should start from a fresh container.
 - Use `@app.local_entrypoint` or a plain local launcher to expose hyperparameters and dataset switches as CLI arguments instead of hard-coding every experiment.
 - Keep the first version single-node unless the user explicitly asks for clusters. Modal multi-node training is a separate advanced path and is currently a beta workflow.
 - Store final artifacts in a layout that makes handoff obvious: base model cache, dataset cache, checkpoint tree, and final exported weights or adapters.
