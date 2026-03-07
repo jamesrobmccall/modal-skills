@@ -1,0 +1,13 @@
+{
+  "eval_id": 0,
+  "eval_name": "stream-stdout-line-by-line",
+  "prompt": "I want to run a Python script securely in a Modal Sandbox and stream back stdout line by line",
+  "assertions": [
+    "The code uses modal.Sandbox.create() or Sandbox.exec() to run the script",
+    "The code reads stdout line by line rather than buffering all output",
+    "The code uses bufsize=1 or an equivalent line-buffered or async streaming approach",
+    "The code correctly handles the ContainerProcess object returned by exec()",
+    "The code creates a modal.App with App.lookup() or modal.App() before creating the sandbox",
+    "The code does not assume that the default python/python3 interpreter has modal installed"
+  ]
+}

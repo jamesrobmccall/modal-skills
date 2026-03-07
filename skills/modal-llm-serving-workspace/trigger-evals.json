@@ -1,0 +1,22 @@
+[
+  {"query": "I want to deploy Llama 3.1 70B on Modal with an openai-compatible endpoint that my existing SDK clients can point at", "should_trigger": true},
+  {"query": "my vllm deployment on modal cold starts in 3 minutes and thats killing my p50 latency - what are my options for reducing that", "should_trigger": true},
+  {"query": "I need to run batch inference on 100k documents using qwen2.5 on modal - optimize for cost and throughput not latency", "should_trigger": true},
+  {"query": "how do i serve mistral 7b on modal with sglang for lowest possible first token latency? my users are in us-east", "should_trigger": true},
+  {"query": "vllm on modal keeps OOMing on my A100 with llama 70b - how do i tune tensor parallelism and memory utilization", "should_trigger": true},
+  {"query": "I want to deploy an openai-compatible API on Modal that my langchain app can use, pointing at a self-hosted model", "should_trigger": true},
+  {"query": "how do i use modal memory snapshots to reduce cold start time for my vllm server from 4 minutes to under 30 seconds", "should_trigger": true},
+  {"query": "I need concurrent inputs on my modal vllm deployment - how many parallel requests can one container handle and what knobs control it", "should_trigger": true},
+  {"query": "deploy gemma 2 9b on modal with a regional endpoint in europe to minimize latency for our EU customers", "should_trigger": true},
+  {"query": "I want to benchmark throughput of my modal vllm deployment - tokens per second per dollar, how do i measure and optimize this", "should_trigger": true},
+  {"query": "fine-tune a llama model on my custom dataset using modal gpus", "should_trigger": false},
+  {"query": "how do i do rag with modal? i want to embed documents and store in a vector db", "should_trigger": false},
+  {"query": "build a chatbot on modal that streams responses back to the browser using server sent events", "should_trigger": false},
+  {"query": "I want to run a modal function that calls the openai API and processes the results - nothing self-hosted", "should_trigger": false},
+  {"query": "train a pytorch model on modal with 8xA100s using DDP - how do i set up distributed training", "should_trigger": false},
+  {"query": "how do i serve a huggingface transformers pipeline on modal - not vllm, just the pipeline API", "should_trigger": false},
+  {"query": "what modal gpu type should i use for stable diffusion xl inference - need to balance speed and cost", "should_trigger": false},
+  {"query": "i want to run whisper on modal for audio transcription - how do i process a batch of audio files", "should_trigger": false},
+  {"query": "deploying an embedding model on modal - sentence transformers, need to encode 1M documents", "should_trigger": false},
+  {"query": "I need to evaluate different model sizes for my use case - how do i A/B test two modal deployments", "should_trigger": false}
+]

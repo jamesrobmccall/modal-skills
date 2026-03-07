@@ -1,0 +1,9 @@
+interface:
+  display_name: "Modal Fine-Tuning"
+  short_description: "Fine-tune LLMs, diffusion models, and vision models on Modal GPUs."
+  default_prompt: "Use $modal-finetuning to design, debug, or adapt a Modal GPU fine-tuning workflow for LoRA, QLoRA, YOLO, Diffusers, or GRPO training."
+  tags:
+    - modal
+    - training
+    - finetuning
+    - gpu

@@ -1,0 +1,106 @@
+{
+  "expectations": [
+    {
+      "text": "The code uses @modal.batched decorator on the transcription function",
+      "passed": true,
+      "evidence": "solution.py line 52: `@modal.batched(max_batch_size=16, wait_ms=200)` decorates the `transcribe` method of `WhisperBatchTranscriber`."
+    },
+    {
+      "text": "The code sets a batch_size appropriate for GPU memory and throughput",
+      "passed": true,
+      "evidence": "solution.py line 52 sets `max_batch_size=16`. Transcript Step 3 justifies this: 'The Whisper base model on a T4 (16 GB VRAM) can comfortably process 16 audio clips simultaneously.' Inline comments in solution.py note how to scale up or down for different model sizes."
+    },
+    {
+      "text": "The code sets wait_ms to control how long to wait for a batch to fill",
+      "passed": true,
+      "evidence": "solution.py line 52: `wait_ms=200` is set in the `@modal.batched` decorator. The docstring explains: 'queue inputs for up to 200 ms to build a larger batch. Tune lower (e.g. 50 ms) for latency-sensitive workloads; higher (e.g. 500 ms) for pure throughput.'"
+    },
+    {
+      "text": "The decorated function receives a list of inputs and returns a list of results (matching length)",
+      "passed": true,
+      "evidence": "solution.py line 53: signature is `def transcribe(self, audio_bytes_list: list[bytes]) -> list[str]`. Lines 96-99 enforce the contract with an assertion: `assert len(results) == len(audio_bytes_list)`."
+    },
+    {
+      "text": "The code uses GPU resources (gpu= parameter) on the batched function",
+      "passed": true,
+      "evidence": "solution.py lines 27-32: `@app.cls(image=image, gpu=\"T4\", ...)` — the GPU is specified on the class decorator that wraps the batched method, which is the correct place for the gpu= parameter when using @app.cls."
+    },
+    {
+      "text": "The response explains or demonstrates how callers invoke the batched function (individual calls that get coalesced)",
+      "passed": true,
+      "evidence": "solution.py lines 107-139 show two caller patterns in `main()`: (1) `transcriber.transcribe.remote(audio_bytes)` for a single item, (2) `transcriber.transcribe.map(audio_payloads)` for a stream. Comments explicitly state '.map() submits each item individually; @modal.batched coalesces them server-side into GPU batches automatically.' A third pattern using `modal.Cls.from_name()` is shown at lines 146-156."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Read": 2,
+      "Write": 3,
+      "Bash": 0,
+      "Glob": 0,
+      "Grep": 0
+    },
+    "total_tool_calls": 5,
+    "total_steps": 5,
+    "errors_encountered": 0,
+    "output_chars": 3872,
+    "transcript_chars": 2756
+  },
+  "timing": {
+    "executor_duration_seconds": null,
+    "total_duration_seconds": 72.4
+  },
+  "claims": [
+    {
+      "claim": "T4 GPU can handle batch size 16 for Whisper base model without memory issues",
+      "type": "factual",
+      "verified": false,
+      "evidence": "Reasonable claim given T4 has 16 GB VRAM and Whisper base is a small model (~39M params), but not empirically verified — no actual Modal run was executed in this eval."
+    },
+    {
+      "claim": "wait_ms=200 is a reasonable default for latency/throughput tradeoff",
+      "type": "quality",
+      "verified": true,
+      "evidence": "200 ms is a well-established default in the Modal docs and the skill reference. The code also documents how to tune it, making it genuinely instructive rather than arbitrary."
+    },
+    {
+      "claim": "The implementation correctly satisfies the list-in/list-out contract",
+      "type": "quality",
+      "verified": true,
+      "evidence": "The code iterates over inputs, builds results list, and asserts equal length before returning. The contract is correctly implemented and enforced."
+    },
+    {
+      "claim": "Audio processing is done sequentially within each batched call using tempfiles",
+      "type": "process",
+      "verified": true,
+      "evidence": "solution.py lines 75-93 show a for-loop over audio_bytes_list, writing each to a NamedTemporaryFile and processing with whisper.load_audio. This is serial within the batch — it does not exploit true GPU parallelism across items in the batch."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": null,
+        "reason": "No assertion checks whether the batched function is placed on a class that uses @app.cls (required by Modal — @modal.batched cannot be used on @app.function). The solution gets this right, but a wrong answer could use @app.function and still pass all current assertions."
+      },
+      {
+        "assertion": "The decorated function receives a list of inputs and returns a list of results (matching length)",
+        "reason": "This assertion is satisfied by the code structure, but the implementation processes items sequentially in a Python for-loop rather than in a true batched GPU operation. A more discriminating check would verify that the GPU computation itself is vectorized (e.g., mel spectrograms stacked into a batch tensor), not just that list-in/list-out is respected. The current solution benefits from coalescing overhead (fewer kernel launches) but does not batch the GPU computation itself."
+      },
+      {
+        "assertion": null,
+        "reason": "No assertion verifies that the solution follows the skill's constraint: a class with @modal.batched must not contain other @modal.method or @modal.batched methods. This is a Modal-specific correctness requirement that is easy to violate and not covered."
+      }
+    ],
+    "overall": "All assertions pass and the solution is substantively correct. The most meaningful gap is that the evals do not check the @app.cls requirement (vs @app.function) or the single-batched-method-per-class constraint — both are Modal-specific rules that are easy to get wrong and not currently tested."
+  }
+}

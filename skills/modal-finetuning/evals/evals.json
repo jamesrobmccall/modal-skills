@@ -1,0 +1,63 @@
+{
+  "skill_name": "modal-finetuning",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I want to fine-tune Qwen3 on my own chat dataset on Modal. Use a single GPU, make it resumable if the run gets interrupted, and keep costs reasonable.",
+      "expected_output": "A working plan or code sketch for a single-node Unsloth or PEFT-style SFT or QLoRA workflow on Modal that caches the base model, stores checkpoints in Volumes, uses Secrets for external credentials, and exposes the important hyperparameters via a local entrypoint or CLI flags.",
+      "files": [],
+      "expectations": [
+        "The response chooses an LLM SFT or LoRA workflow rather than diffusion, YOLO, RL, or inference serving",
+        "The response prefers LoRA or QLoRA over full fine-tuning unless the user states otherwise",
+        "The response uses Modal Volumes for model cache and checkpoints",
+        "The response accounts for resumable checkpoints or retry safety",
+        "The response mentions Modal Secrets for Hugging Face, Weights & Biases, or other external credentials when relevant",
+        "The response keeps the design single-node and GPU-aware",
+        "The response does not drift into OpenAI-compatible serving guidance"
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "I have 12 product photos and want to fine-tune a text-to-image model on Modal so I can generate more images in the same style. Save outputs I can inspect after training.",
+      "expected_output": "A Diffusers LoRA fine-tuning workflow on Modal that stages the image dataset, uses a Volume for checkpoints and sample outputs, calls out any gated model access or secrets requirements, and keeps training and later serving concerns separated.",
+      "files": [],
+      "expectations": [
+        "The response chooses a diffusion LoRA workflow rather than an LLM or YOLO workflow",
+        "The response stores checkpoints and sample outputs in a Modal Volume",
+        "The response mentions any gated Hugging Face model access and Secret requirements when relevant",
+        "The response keeps the implementation single-node and GPU-aware",
+        "The response separates training from later inference or web serving",
+        "The response does not recommend generic batch orchestration as the primary pattern"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Help me fine-tune YOLO on Modal for a labeled image dataset. I need a path that can mount or download the dataset, train on GPUs, and keep the training artifacts around for later evaluation.",
+      "expected_output": "A YOLO-style vision fine-tuning workflow on Modal that stages or downloads the dataset, uses a Volume for dataset persistence and training outputs, identifies required secrets such as Roboflow when relevant, and keeps the scope on training rather than streaming inference.",
+      "files": [],
+      "expectations": [
+        "The response chooses the YOLO workflow rather than diffusion, LLM SFT, or RL",
+        "The response handles dataset staging through a Modal Volume or an equivalent persisted path",
+        "The response persists training artifacts for later inspection",
+        "The response mentions Secrets when the dataset provider requires them",
+        "The response keeps the design single-node and GPU-aware",
+        "The response does not drift into WebRTC or production inference architecture"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I want to do GRPO post-training for an LLM on Modal. Pick the right framework for me and explain how to organize checkpoints, rewards, and GPU usage.",
+      "expected_output": "A GRPO training design that picks TRL for the simpler single-node trainer path unless the task needs the more explicit verl split, persists checkpoints in Volumes, uses Secrets for logging or model access, and explains when sandbox-backed reward execution is appropriate.",
+      "files": [],
+      "expectations": [
+        "The response chooses GRPO as an RL post-training workflow and distinguishes it from supervised fine-tuning",
+        "The response explains the tradeoff between TRL and verl and picks one for the described task",
+        "The response persists checkpoints in a Modal Volume",
+        "The response mentions Secrets for Hugging Face, Weights & Biases, or similar systems when relevant",
+        "The response is GPU-aware and stays single-node by default",
+        "The response treats sandbox usage as a reward-execution detail rather than the main workflow",
+        "The response does not turn into guidance for deploying an inference API"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "expectations": [
+    {
+      "text": "The code uses vLLM as the serving engine",
+      "passed": true,
+      "evidence": "solution.py installs 'vllm==0.6.3.post1' and launches 'python -m vllm.entrypoints.openai.api_server' as a subprocess in @modal.enter."
+    },
+    {
+      "text": "The code uses @modal.web_server to expose the HTTP endpoint",
+      "passed": true,
+      "evidence": "solution.py line 134: '@modal.web_server(port=VLLM_PORT, startup_timeout=300)' decorates the 'serve' method on LlamaServer."
+    },
+    {
+      "text": "The endpoint is OpenAI-compatible (serves /v1/chat/completions or equivalent)",
+      "passed": true,
+      "evidence": "vLLM's built-in OpenAI-compatible server ('vllm.entrypoints.openai.api_server') is used with '--served-model-name' set. The smoke-test client posts to '{base_url}/v1/chat/completions' (solution.py line 169)."
+    },
+    {
+      "text": "The code pins a specific model revision (e.g., a commit SHA or tag) when pulling from HuggingFace",
+      "passed": false,
+      "evidence": "snapshot_download(MODEL_ID, local_dir=MODEL_DIR, ...) is called with no 'revision=' argument. No commit SHA or tag is pinned anywhere in solution.py."
+    },
+    {
+      "text": "The code stores model weights in a Modal Volume to avoid re-downloading on cold starts",
+      "passed": false,
+      "evidence": "The model is baked into the container image via 'vllm_image.run_function(download_model, ...)'. There is no modal.Volume defined or mounted anywhere in solution.py. The transcript (Step 1) explicitly states 'Download model weights at image build time' as the chosen strategy, which is a different pattern from using a Volume."
+    },
+    {
+      "text": "The code includes a readiness check, health check, or smoke-test client",
+      "passed": true,
+      "evidence": "Two mechanisms are present: (1) @modal.enter polls 'http://localhost:{VLLM_PORT}/health' in a loop for up to 120 seconds (solution.py lines 116-127), raising RuntimeError if it never becomes ready. (2) A @app.local_entrypoint smoke-test sends a real chat completion request to '/v1/chat/completions' (solution.py lines 147-177)."
+    },
+    {
+      "text": "The code sets HF_XET_HIGH_PERFORMANCE=1 or equivalent to speed up Hub downloads",
+      "passed": false,
+      "evidence": "solution.py sets 'HF_HUB_ENABLE_HF_TRANSFER=1' (line 41), which enables hf-transfer. HF_XET_HIGH_PERFORMANCE=1 is not set. These are distinct mechanisms: hf-transfer is a fast Rust-based downloader for standard HF downloads, while HF_XET_HIGH_PERFORMANCE=1 activates XetHub chunked-transfer acceleration. The expectation is not met."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 3,
+    "total": 7,
+    "pass_rate": 0.57
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Read": 0,
+      "Write": 3,
+      "Bash": 0,
+      "Glob": 0,
+      "Grep": 0,
+      "ToolSearch": 1
+    },
+    "total_tool_calls": 4,
+    "total_steps": 4,
+    "errors_encountered": 0,
+    "output_chars": 4521,
+    "transcript_chars": 2873
+  },
+  "timing": {
+    "executor_duration_seconds": null,
+    "grader_duration_seconds": null,
+    "total_duration_seconds": 72.6
+  },
+  "claims": [
+    {
+      "claim": "Model weights are cached in the container image so cold starts only need to load weights from disk, not fetch from HuggingFace",
+      "type": "process",
+      "verified": true,
+      "evidence": "solution.py uses 'vllm_image.run_function(download_model, ...)' which bakes weights into the image at build time. This is a valid cold-start optimization, though different from a Modal Volume approach."
+    },
+    {
+      "claim": "The deployment exposes an OpenAI-compatible API that any existing OpenAI SDK client can target by changing only base_url",
+      "type": "quality",
+      "verified": true,
+      "evidence": "vLLM's openai api_server is used, '--served-model-name' matches what the client sends as 'model', and commented client code shows exactly the base_url substitution pattern."
+    },
+    {
+      "claim": "hf-transfer is used to speed up Hub downloads",
+      "type": "process",
+      "verified": true,
+      "evidence": "'hf-transfer==0.1.8' is pip-installed and HF_HUB_ENABLE_HF_TRANSFER=1 is set in the image environment."
+    },
+    {
+      "claim": "The solution works without re-downloading on every cold start",
+      "type": "quality",
+      "verified": true,
+      "evidence": "Image-baking via run_function ensures weights are in the image layer. Cold starts load from the cached image, not from the network. This satisfies the intent but via a different mechanism than a Modal Volume."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "The code stores model weights in a Modal Volume to avoid re-downloading on cold starts",
+        "reason": "The assertion conflates two distinct valid strategies: (1) baking weights into the container image via run_function, and (2) using a modal.Volume. Image-baking also avoids re-downloading on cold starts and may be preferable for smaller models, but fails this assertion. Consider whether the eval should specifically require a Volume, or more broadly accept any strategy that avoids re-downloading (including image-baking). If Volume is specifically required (e.g., because it enables weight sharing across multiple app versions), that motivation should be documented."
+      },
+      {
+        "assertion": "The code sets HF_XET_HIGH_PERFORMANCE=1 or equivalent to speed up Hub downloads",
+        "reason": "HF_HUB_ENABLE_HF_TRANSFER=1 with hf-transfer installed is the canonical Modal/HuggingFace pattern for fast downloads and is broadly considered equivalent. The assertion's 'or equivalent' phrasing implies hf-transfer should qualify, but the expectation text names a specific env var (HF_XET_HIGH_PERFORMANCE=1) that is a separate, newer mechanism. This ambiguity caused a FAIL verdict on code that does use an accelerated download method. The eval should clarify which acceleration mechanism is required, or explicitly list hf-transfer as an accepted equivalent."
+      },
+      {
+        "reason": "No assertion checks that the vLLM server is started with the correct model path or that '--served-model-name' matches the model ID used in API calls. A solution that starts vLLM with the wrong model or a mismatched served-model-name would pass all current assertions but produce incorrect behavior."
+      }
+    ],
+    "overall": "Two of the three failures are attributable to assertion ambiguity rather than clearly wrong code. The Volume vs image-baking distinction and the HF_XET vs hf-transfer distinction both represent reasonable design choices that the assertions do not clearly exclude or include. Tightening these assertions would make the eval more discriminating."
+  }
+}

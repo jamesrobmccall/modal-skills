@@ -1,0 +1,14 @@
+{
+  "eval_id": 0,
+  "eval_name": "llama-openai-compatible-api",
+  "prompt": "Deploy Llama 3.1 8B on Modal with an OpenAI-compatible API that I can point my existing OpenAI SDK client at",
+  "assertions": [
+    "The code uses vLLM as the serving engine",
+    "The code uses @modal.web_server to expose the HTTP endpoint",
+    "The endpoint is OpenAI-compatible (serves /v1/chat/completions or equivalent)",
+    "The code pins a specific model revision (e.g., a commit SHA or tag) when pulling from HuggingFace",
+    "The code stores model weights in a Modal Volume to avoid re-downloading on cold starts",
+    "The code includes a readiness check, health check, or smoke-test client",
+    "The code sets HF_XET_HIGH_PERFORMANCE=1 or equivalent to speed up Hub downloads"
+  ]
+}

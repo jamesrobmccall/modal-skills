@@ -1,0 +1,103 @@
+{
+  "expectations": [
+    {
+      "text": "The code uses sandbox.tunnels() to retrieve the public tunnel URL",
+      "passed": true,
+      "evidence": "solution.py lines 42-44: `tunnels = sandbox.tunnels()` followed by `return tunnels[port].url` inside wait_for_tunnel(). The URL is then used as tunnel_url throughout main()."
+    },
+    {
+      "text": "The code polls sandbox.tunnels() for readiness before returning or using the URL",
+      "passed": true,
+      "evidence": "wait_for_tunnel() (lines 35-49) loops with time.sleep(POLL_INTERVAL_S) calling sandbox.tunnels() each iteration until the port key appears, with a configurable 60s timeout. The tunnel URL is not used until polling succeeds."
+    },
+    {
+      "text": "The code opens only the port(s) the service actually needs",
+      "passed": true,
+      "evidence": "Sandbox.create() is called with `encrypted_ports=[CONTAINER_PORT]` (CONTAINER_PORT=8000), and the HTTP server is started on exactly port 8000 via `python -m http.server 8000`. No other ports are opened."
+    },
+    {
+      "text": "The code calls sandbox.terminate() to shut down the sandbox when done",
+      "passed": true,
+      "evidence": "solution.py line 135: `sandbox.terminate()` is called inside a `finally` block, guaranteeing cleanup even if an exception is raised during polling or service use."
+    },
+    {
+      "text": "The tunnel URL is a genuine tunnel object or URL string, not a placeholder",
+      "passed": true,
+      "evidence": "The URL is obtained via `tunnels[port].url` from the live Modal tunnel mapping returned by sandbox.tunnels(). It is not a hardcoded string or placeholder; the code would fail at runtime if the tunnel were not real."
+    },
+    {
+      "text": "The code does not rely on the sandbox process itself to know its own public URL",
+      "passed": true,
+      "evidence": "The URL is retrieved by the calling script via sandbox.tunnels() outside the container. Nothing is injected into the sandboxed process; the exec'd HTTP server has no awareness of its public URL."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Read": 4,
+      "Write": 3,
+      "Glob": 1,
+      "ToolSearch": 2,
+      "Bash": 0,
+      "Grep": 0
+    },
+    "total_tool_calls": 10,
+    "total_steps": 6,
+    "errors_encountered": 0,
+    "output_chars": 3127,
+    "transcript_chars": 2438
+  },
+  "timing": {
+    "executor_duration_seconds": 69.7,
+    "grader_duration_seconds": null,
+    "total_duration_seconds": 69.7
+  },
+  "claims": [
+    {
+      "claim": "Two-phase polling is used: first for tunnel infrastructure, then for HTTP readiness",
+      "type": "process",
+      "verified": true,
+      "evidence": "solution.py implements wait_for_tunnel() (polls sandbox.tunnels()) and wait_for_http() (polls the public HTTPS URL with urllib.request) sequentially in main(). Matches transcript Step 5's design decision table."
+    },
+    {
+      "claim": "The solution uses no third-party dependencies",
+      "type": "quality",
+      "verified": true,
+      "evidence": "Only stdlib modules (time, urllib.request, urllib.error) and modal are imported. No requests, httpx, or other packages are used."
+    },
+    {
+      "claim": "The server entrypoint (sleep 300) keeps the container alive independently of the exec'd server process",
+      "type": "process",
+      "verified": true,
+      "evidence": "sandbox.exec() is called without wait(), and the container entrypoint is ['sleep', '300'], so the container will not exit if the HTTP server crashes."
+    },
+    {
+      "claim": "No errors were encountered during execution",
+      "type": "factual",
+      "verified": true,
+      "evidence": "transcript.md Step: 'Errors encountered: None.' and metrics.json: errors_encountered=0."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "reason": "All six expectations pass cleanly, but none check that the polling loop actually enforces a timeout rather than being infinite. A broken implementation could spin forever. Consider an assertion like: 'The polling code raises TimeoutError (or equivalent) if the tunnel or service does not appear within a bounded time.'"
+      },
+      {
+        "assertion": "The tunnel URL is a genuine tunnel object or URL string, not a placeholder",
+        "reason": "This assertion passes as long as .url is read from the tunnel object, but it cannot be verified at static analysis time that the URL is actually reachable or HTTPS. Since the code was not executed in this eval, a more discriminating version would check that the URL starts with 'https://' — or require a live run log showing an HTTP 200 response."
+      }
+    ],
+    "overall": "Assertions are well-targeted and map cleanly to the skill's key behaviors. The main gap is that correctness is verified by static code inspection only — the script was not run, so actual tunnel reachability and HTTP 200 reception are untested. Adding an assertion that requires evidence of a successful live HTTP response would significantly raise the bar."
+  }
+}

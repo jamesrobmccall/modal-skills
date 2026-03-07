@@ -1,0 +1,13 @@
+{
+  "eval_id": 2,
+  "eval_name": "whisper-dynamic-batching",
+  "prompt": "I'm running Whisper transcription on Modal and want to batch multiple audio inputs together per GPU call to maximize utilization",
+  "assertions": [
+    "The code uses @modal.batched decorator on the transcription function",
+    "The code sets a batch_size appropriate for GPU memory and throughput",
+    "The code sets wait_ms to control how long to wait for a batch to fill",
+    "The decorated function receives a list of inputs and returns a list of results (matching length)",
+    "The code uses GPU resources (gpu= parameter) on the batched function",
+    "The response explains or demonstrates how callers invoke the batched function (individual calls that get coalesced)"
+  ]
+}

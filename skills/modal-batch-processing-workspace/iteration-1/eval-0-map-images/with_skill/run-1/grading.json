@@ -1,0 +1,109 @@
+{
+  "expectations": [
+    {
+      "text": "The code uses .map() or .starmap() for synchronous fan-out and in-process result collection",
+      "passed": true,
+      "evidence": "solution.py line 134: `resize_to_thumbnail.map(image_payloads, order_outputs=True, return_exceptions=True)` — uses .map() directly on the Modal function."
+    },
+    {
+      "text": "The code does not use .spawn() since the caller needs results back immediately",
+      "passed": true,
+      "evidence": "No call to .spawn() or .spawn_map() appears anywhere in solution.py. The transcript also explicitly notes: 'Workflow: .map() with @app.local_entrypoint() — caller collects all 5,000 results in-process.'"
+    },
+    {
+      "text": "The code includes a @app.function or @app.cls decorated resize function",
+      "passed": true,
+      "evidence": "solution.py lines 40–51: `@app.function(image=remote_image, max_containers=100, timeout=60, retries=1)` decorates `resize_to_thumbnail`."
+    },
+    {
+      "text": "The code demonstrates collecting all results (e.g., iterating the .map() generator or list(...))",
+      "passed": true,
+      "evidence": "solution.py line 133: `results = list(resize_to_thumbnail.map(...))` explicitly materializes the generator, then iterates `results` in a for loop on line 146."
+    },
+    {
+      "text": "The code sets or acknowledges max_containers or concurrency limits where relevant",
+      "passed": true,
+      "evidence": "solution.py line 44: `max_containers=100` is set on the @app.function decorator. Comments explain the rationale: '5,000 images / 100 containers = ~50 images per container at full saturation.'"
+    },
+    {
+      "text": "The code uses a local_entrypoint or with app.run(): to orchestrate the 5,000 inputs",
+      "passed": true,
+      "evidence": "solution.py line 108: `@app.local_entrypoint()` decorates `main()`, which generates 5,000 synthetic images and submits the batch via .map()."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Read": 3,
+      "Write": 3,
+      "Bash": 0,
+      "Glob": 1,
+      "Grep": 0,
+      "ToolSearch": 2
+    },
+    "total_tool_calls": 9,
+    "total_steps": 6,
+    "errors_encountered": 0,
+    "output_chars": 3895,
+    "transcript_chars": 2811
+  },
+  "timing": {
+    "executor_duration_seconds": 75.7,
+    "grader_duration_seconds": null,
+    "total_duration_seconds": 75.7
+  },
+  "claims": [
+    {
+      "claim": "The solution uses .map() (not .spawn()) for synchronous fan-out",
+      "type": "process",
+      "verified": true,
+      "evidence": "solution.py line 134 uses .map(); no .spawn() call exists in the file."
+    },
+    {
+      "claim": "return_exceptions=True is used to retain partial progress on corrupt inputs",
+      "type": "process",
+      "verified": true,
+      "evidence": "solution.py line 136: `return_exceptions=True` is passed to .map(), and the result loop on lines 146–150 handles Exception instances separately."
+    },
+    {
+      "claim": "max_containers=100 caps concurrency for a 5,000-image workload",
+      "type": "factual",
+      "verified": true,
+      "evidence": "solution.py line 44: `max_containers=100` is explicitly set. The comment on line 41-43 explains the reasoning."
+    },
+    {
+      "claim": "The solution is self-contained using synthetic images",
+      "type": "quality",
+      "verified": true,
+      "evidence": "`_generate_synthetic_images` (lines 83–100) generates 5,000 distinct solid-color 640x480 JPEG images locally using Pillow, requiring no external dataset."
+    },
+    {
+      "claim": "Results are collected in input order (order_outputs=True)",
+      "type": "process",
+      "verified": true,
+      "evidence": "solution.py line 135: `order_outputs=True` is explicitly passed, matching the skill reference recommendation."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "reason": "No assertion checks that return_exceptions=True is used. For a 5,000-item batch, omitting this causes the entire .map() call to raise on the first corrupt image rather than collecting partial results — a meaningful correctness distinction that no expectation catches."
+      },
+      {
+        "assertion": "The code sets or acknowledges max_containers or concurrency limits where relevant",
+        "reason": "This assertion is weakly worded ('or acknowledges') — a comment alone would pass it. Consider requiring the value to appear as an actual parameter in the function decorator, not just in prose."
+      }
+    ],
+    "overall": "All six assertions are well-targeted and the solution satisfies them with genuine substance. The main gap is the absence of a check for return_exceptions=True, which is non-trivial for large batches. The concurrency assertion could be tightened to require a concrete parameter value rather than accepting acknowledgment in comments."
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "expectations": [
+    {
+      "text": "The code uses @modal.batched decorator on the transcription function",
+      "passed": true,
+      "evidence": "solution.py line 89: `@modal.batched(max_batch_size=16, wait_ms=500)` applied directly to the `transcribe` method on `WhisperBatchTranscriber`."
+    },
+    {
+      "text": "The code sets a batch_size appropriate for GPU memory and throughput",
+      "passed": true,
+      "evidence": "max_batch_size=16 is set and justified in the transcript (Step 3) and code comments: 'chosen to fit 16 simultaneous transcription tasks within typical A10G memory; adjust down if very long audio files cause OOM.' The A10G has 24 GB VRAM, making 16 a reasonable upper bound for audio transcription workloads."
+    },
+    {
+      "text": "The code sets wait_ms to control how long to wait for a batch to fill",
+      "passed": true,
+      "evidence": "solution.py line 89: `wait_ms=500` is set on `@modal.batched`. Transcript Step 3 explains: '500 ms keeps batch utilization high without adding more than half a second of queuing latency per request.'"
+    },
+    {
+      "text": "The decorated function receives a list of inputs and returns a list of results (matching length)",
+      "passed": true,
+      "evidence": "solution.py line 90: signature is `def transcribe(self, audio_bytes_batch: list[bytes]) -> list[str]`. The body appends one result per input element, and the docstring states: 'len(result) == len(audio_bytes_batch) is always guaranteed by Modal.'"
+    },
+    {
+      "text": "The code uses GPU resources (gpu= parameter) on the batched function",
+      "passed": true,
+      "evidence": "solution.py lines 46-51: `@app.cls(gpu=\"A10G\", ...)` is set on the class containing the batched method. The GPU is attached at the class level, which is the correct Modal pattern for @app.cls methods — individual methods cannot independently declare gpu= when using @app.cls."
+    },
+    {
+      "text": "The response explains or demonstrates how callers invoke the batched function (individual calls that get coalesced)",
+      "passed": true,
+      "evidence": "Two caller patterns are demonstrated. Pattern 1 (solution.py lines 232): `results = list(transcriber.transcribe.map(audio_bytes_list))`. Pattern 2 (lines 268-269): `futures = [transcriber.transcribe.spawn(audio) for audio in audio_bytes_list]; return [f.get() for f in futures]`. Both are explained in transcript Step 3 and the main() docstring."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Read": 2,
+      "Write": 3,
+      "Bash": 3,
+      "Glob": 0,
+      "Grep": 0
+    },
+    "total_tool_calls": 8,
+    "total_steps": 6,
+    "errors_encountered": 1,
+    "output_chars": 10864,
+    "transcript_chars": 6916
+  },
+  "timing": {
+    "executor_duration_seconds": 229.5,
+    "grader_duration_seconds": null,
+    "total_duration_seconds": 229.5
+  },
+  "claims": [
+    {
+      "claim": "max_batch_size=16 fits within A10G (24 GB VRAM) memory for large-v3",
+      "type": "quality",
+      "verified": false,
+      "evidence": "Plausible but unverified — the claim is reasonable given A10G VRAM and faster-whisper's typical memory footprint, but no profiling or OOM testing was done. The code itself notes 'adjust down if very long audio files cause OOM', which is an appropriate caveat."
+    },
+    {
+      "claim": "The model is loaded once per container via @modal.enter()",
+      "type": "process",
+      "verified": true,
+      "evidence": "solution.py lines 75-87: `@modal.enter()` on `load_model` loads the WhisperModel into `self.model` at container start. The `transcribe` method then references `self.model` without reloading."
+    },
+    {
+      "claim": "faster-whisper is ~4x faster than stock Whisper at equivalent accuracy",
+      "type": "factual",
+      "verified": false,
+      "evidence": "Stated in transcript Step 2 as a reason for choosing faster-whisper over openai-whisper. This is a commonly cited benchmark figure from the faster-whisper documentation, but it was not verified within this run."
+    },
+    {
+      "claim": "Output ordering is guaranteed by Modal for @modal.batched",
+      "type": "factual",
+      "verified": false,
+      "evidence": "Stated in transcript Step 6 ('Modal guarantees that @modal.batched returns outputs in the same order as inputs'). This is consistent with Modal's documented behavior but was not independently verified in this run."
+    },
+    {
+      "claim": "1 error was encountered during execution",
+      "type": "process",
+      "verified": true,
+      "evidence": "metrics.json: `errors_encountered: 1`. The transcript does not explicitly identify the error, so its nature is unknown, but the final output is complete and correct."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "reason": "No assertion checks that the list contract is enforced at runtime — i.e., that the returned list length actually equals the input length. The current assertion is satisfied by the type annotation alone. A stronger assertion would require inspecting the implementation body to confirm every code path appends exactly one result per input (or raises before returning a mismatched list)."
+      },
+      {
+        "assertion": "The code uses GPU resources (gpu= parameter) on the batched function",
+        "reason": "The assertion says 'on the batched function' but in Modal's @app.cls pattern, gpu= cannot be set per-method — it is set on the class decorator. The assertion wording could mislead a grader into marking a correct implementation as failing if they expect gpu= on the method itself. Consider rewording to 'on the class or function containing the batched method'."
+      }
+    ],
+    "overall": "All six assertions are well-targeted and discriminating. The minor suggestions above are about wording precision and runtime verification depth, not fundamental gaps. The eval set is solid."
+  }
+}
