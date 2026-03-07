@@ -1,0 +1,9 @@
+{
+  "run_name": "smoke-20260307-210910",
+  "model_name": "HuggingFaceTB/SmolLM2-135M-Instruct",
+  "gpu": "T4",
+  "train_examples": 6,
+  "max_steps": 6,
+  "adapter_dir": "/checkpoints/runs/smoke-20260307-210910/final_adapter",
+  "sample_path": "/checkpoints/runs/smoke-20260307-210910/sample.txt"
+}

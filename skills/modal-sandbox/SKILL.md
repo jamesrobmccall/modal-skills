@@ -1,6 +1,6 @@
 ---
 name: modal-sandbox
-description: Create, attach to, debug, and persist Modal Sandboxes for secure code execution, long-lived controller loops, tunneled services, runtime file exchange, and snapshot-based restore flows. Use for sandbox lifecycle, `exec(...)`, tunnels, Volumes, or snapshot workflows on Modal.
+description: Python-first Modal Sandbox creation and control for secure code execution, long-lived controller processes, tunneled services, file exchange, and snapshot-based persistence. Use this skill whenever the user mentions Modal Sandbox by name, wants to run or execute code securely in an isolated container on Modal, needs to stream stdout from a sandbox line by line, wants to expose an HTTP or TCP service running inside a sandbox via a public URL or tunnel, needs to checkpoint or snapshot sandbox filesystem state mid-run, wants to upload files into a running sandbox at runtime, needs to reattach to an existing sandbox by ID or name, or is building a code interpreter, agent loop, or remote execution workflow on top of Modal. Also use for sandbox lifecycle questions: timeouts, idle shutdown, exec() calls, ContainerProcess handling, and block_network controls.
 license: MIT
 ---
 

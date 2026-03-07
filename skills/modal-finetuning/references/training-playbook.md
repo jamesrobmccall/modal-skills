@@ -7,6 +7,7 @@ Read this first. Use it to classify the fine-tuning job before choosing a specif
 - Confirm whether the job is LLM supervised fine-tuning, diffusion LoRA, YOLO-style vision training, or GRPO post-training.
 - Confirm the base model family, dataset location and format, GPU budget, checkpoint destination, and what happens after training finishes.
 - Ask whether the output should be adapters only, merged weights, evaluation samples, or a handoff to a later serving workflow.
+- For long or expensive jobs, plan a cheap smoke test first with a tiny public model, a tiny dataset, and very few steps so you can verify the end-to-end training loop before scaling up.
 
 ## Choose the Smallest Effective Adaptation
 
@@ -39,8 +40,9 @@ Read this first. Use it to classify the fine-tuning job before choosing a specif
 
 - Add `timeout=` intentionally for long runs.
 - Add retries only when checkpoint resume is correct.
-- Keep `max_inputs=1` for long, stateful training functions unless there is a strong reason to share a container.
+- Keep one stateful training container per run by default, and prefer `single_use_containers=True` on retry-sensitive jobs instead of relying on stale `max_inputs` guidance.
 - Make resume points obvious and durable so a retried run can continue instead of silently starting over.
+- Save at least one small post-training artifact, such as a sample generation or validation output, so the smoke test proves more than just "the process exited."
 
 ## Keep Boundaries Clear
 

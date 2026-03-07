@@ -1,6 +1,6 @@
 ---
 name: modal-batch-processing
-description: Design and debug Modal batch workloads using `.map`, `.starmap`, `.spawn`, `.spawn_map`, and `@modal.batched`. Use for detached job queues, result collection, concurrency limits, retries, timeouts, Volumes, and external result sinks on Modal. Do not use for vLLM or SGLang inference services.
+description: Design and debug Modal batch workloads using `.map`, `.starmap`, `.spawn`, `.spawn_map`, and `@modal.batched`. Use this skill whenever the user wants to process many items (images, documents, audio, records) in parallel across Modal workers and collect results, needs to submit a long-running job from a web server without blocking the request and return a job ID the caller can poll, wants to fan out work across Modal containers with .map or spawn tasks in the background with .spawn, needs to handle partial failures or retries in a Modal batch job, wants to rate-limit or cap the number of concurrent Modal containers, needs to coalesce many small requests into fewer GPU calls with @modal.batched, or is asking about the difference between .map, .spawn, and .spawn_map on Modal. Do not use for vLLM or SGLang inference services.
 license: MIT
 ---
 

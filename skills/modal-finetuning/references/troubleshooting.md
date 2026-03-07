@@ -18,6 +18,12 @@
 - Check that retry behavior actually points training at the latest checkpoint.
 - Check that the checkpoint directory layout is stable across runs.
 
+## Trainer API Drift
+
+- Pin training-library versions and match the code pattern to the installed version instead of pasting an old snippet blindly.
+- Current TRL SFT flows may use `SFTConfig` and `processing_class` where older examples used `TrainingArguments` and `tokenizer`.
+- Run a tiny smoke test before the real job so API mismatches fail cheaply.
+
 ## Volume Layout Confusion
 
 - Separate base model cache, dataset cache, checkpoints, and exported artifacts into distinct directories.

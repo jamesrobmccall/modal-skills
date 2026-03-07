@@ -1,6 +1,6 @@
 ---
 name: modal-llm-serving
-description: Deploy, tune, benchmark, and debug Modal-hosted open-weight LLM inference services with vLLM or SGLang. Use for OpenAI-compatible APIs, low-latency regional serving, cold-start reduction, and throughput-oriented batch inference. Do not use for fine-tuning, RAG, training, or general ML pipelines.
+description: Serve open-weight LLMs on Modal with vLLM or SGLang, including OpenAI-compatible HTTP APIs, low-latency regional deployments, cold-start reduction, and throughput-oriented batch inference. Use when the user wants to deploy or serve an open-weight model (Llama, Mistral, Gemma, Qwen, Phi, Falcon, etc.) on Modal, needs an OpenAI-compatible API endpoint backed by a self-hosted model they can point their OpenAI SDK client at, is troubleshooting vLLM cold starts or OOM errors on Modal GPUs, wants to reduce cold-start time with memory snapshots or keep-warm containers, needs to optimize throughput or tokens-per-dollar for batch LLM inference on Modal, wants low-latency serving with SGLang and regional routing, or is tuning knobs like concurrent inputs, tensor parallelism, Volume caching, or GPU memory utilization for a Modal LLM service. Do not use for fine-tuning, RAG, training, or general ML pipelines.
 license: MIT
 ---
 
