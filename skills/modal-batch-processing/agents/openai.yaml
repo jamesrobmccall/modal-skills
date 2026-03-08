@@ -1,7 +1,7 @@
 interface:
   display_name: "Modal Batch Processing"
-  short_description: "Design Modal batch workflows with map, spawn, and dynamic batching."
-  default_prompt: "Use $modal-batch-processing to choose and implement the right Modal batch pattern for fan-out, job queues, detached runs, or dynamic batching."
+  short_description: "Choose Modal map, spawn, spawn_map, or batched workflows."
+  default_prompt: "Use $modal-batch-processing to design or debug Modal fan-out, detached job, polling, concurrency, or dynamic batching workflows without drifting into serving, training, or sandbox questions."
   tags:
     - modal
     - python

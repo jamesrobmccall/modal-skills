@@ -1,9 +1,0 @@
-{
-  "tool_calls": {"Read": 0, "Write": 3, "Bash": 0, "Glob": 0, "Grep": 0, "ToolSearch": 1},
-  "total_tool_calls": 4,
-  "total_steps": 4,
-  "files_created": ["solution.md", "transcript.md", "metrics.json"],
-  "errors_encountered": 0,
-  "output_chars": 6200,
-  "transcript_chars": 1650
-}

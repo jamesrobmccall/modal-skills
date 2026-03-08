@@ -1,0 +1,82 @@
+[
+  {
+    "query": "Fine-tune Qwen3 on my chat dataset with LoRA on Modal and resume from checkpoints if the run fails",
+    "should_trigger": true
+  },
+  {
+    "query": "Use QLoRA on Modal to adapt Llama 3 8B to our support transcripts and keep costs under control",
+    "should_trigger": true
+  },
+  {
+    "query": "I have 12 product photos and want to train a diffusion LoRA on Modal and save sample outputs after each checkpoint",
+    "should_trigger": true
+  },
+  {
+    "query": "Help me fine-tune YOLO on Modal for a labeled warehouse dataset and keep the training artifacts in a Volume",
+    "should_trigger": true
+  },
+  {
+    "query": "I want to do GRPO post-training on Modal. Which framework should I use and how should I store checkpoints?",
+    "should_trigger": true
+  },
+  {
+    "query": "What GPU and storage layout should I use for a single-node Unsloth SFT run on Modal?",
+    "should_trigger": true
+  },
+  {
+    "query": "My Modal training job keeps restarting. How should I structure checkpoints and retries for LoRA fine-tuning?",
+    "should_trigger": true
+  },
+  {
+    "query": "How do I stage a Roboflow dataset into Modal for YOLO training and keep the outputs around for later evaluation?",
+    "should_trigger": true
+  },
+  {
+    "query": "I need to resume a diffusion LoRA run on Modal after preemption",
+    "should_trigger": true
+  },
+  {
+    "query": "Design a Modal fine-tuning smoke test for a small LLM before I launch a longer GPU run",
+    "should_trigger": true
+  },
+  {
+    "query": "Deploy Qwen on Modal behind an OpenAI-compatible API",
+    "should_trigger": false
+  },
+  {
+    "query": "How do I batch 100k transcription jobs on Modal with spawn_map?",
+    "should_trigger": false
+  },
+  {
+    "query": "Create a Modal Sandbox that executes untrusted Python code",
+    "should_trigger": false
+  },
+  {
+    "query": "Train a model from scratch on 8 nodes with FSDP on Modal",
+    "should_trigger": false
+  },
+  {
+    "query": "How do I build RAG on Modal with embeddings and vector search?",
+    "should_trigger": false
+  },
+  {
+    "query": "Serve a sentence-transformers embedding model on Modal",
+    "should_trigger": false
+  },
+  {
+    "query": "What is the max timeout on a Modal function?",
+    "should_trigger": false
+  },
+  {
+    "query": "I want a cron job on Modal that emails yesterday's report",
+    "should_trigger": false
+  },
+  {
+    "query": "How do I mount an S3 bucket in a Modal function?",
+    "should_trigger": false
+  },
+  {
+    "query": "My vLLM server on Modal cold starts too slowly",
+    "should_trigger": false
+  }
+]

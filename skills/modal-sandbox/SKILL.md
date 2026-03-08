@@ -1,6 +1,13 @@
 ---
 name: modal-sandbox
-description: Python-first Modal Sandbox creation and control for secure code execution, long-lived controller processes, tunneled services, file exchange, and snapshot-based persistence. Use this skill whenever the user mentions Modal Sandbox by name, wants to run or execute code securely in an isolated container on Modal, needs to stream stdout from a sandbox line by line, wants to expose an HTTP or TCP service running inside a sandbox via a public URL or tunnel, needs to checkpoint or snapshot sandbox filesystem state mid-run, wants to upload files into a running sandbox at runtime, needs to reattach to an existing sandbox by ID or name, or is building a code interpreter, agent loop, or remote execution workflow on top of Modal. Also use for sandbox lifecycle questions: timeouts, idle shutdown, exec() calls, ContainerProcess handling, and block_network controls.
+description: >-
+  Use this skill for Modal Sandbox lifecycle and interactive isolated
+  execution. Trigger when the user needs to run untrusted or user-supplied code
+  in a sandbox, keep a long-lived controller process alive, stream stdout from
+  `exec()` calls, reattach to an existing sandbox, upload files at runtime,
+  expose a tunneled HTTP or TCP service, or checkpoint and restore sandbox
+  state. Do not use it for regular `@app.function` deployments, LLM serving, or
+  training workflows.
 license: MIT
 ---
 
@@ -32,12 +39,17 @@ sandbox = modal.Sandbox.create("sh", "-lc", "sleep 300", app=app)
 
 3. Choose the workflow that matches the task before writing code.
 
+- One-shot command execution and output capture: use `Sandbox.exec(...)`.
+- A conversational or stateful controller loop: keep one long-lived sandbox alive.
+- HTTP or TCP service exposure: use tunnels.
+- Restore or persistence flows: use Volumes, CloudBucketMounts, or snapshots.
+
 ## Choose the Workflow
 
-- Use one-shot `Sandbox.exec(...)` for isolated commands and output capture.
-- Use a long-lived controller loop when the sandbox must keep state across requests; read [references/example-patterns.md](references/example-patterns.md).
-- Use tunnels when the sandbox must expose HTTP or TCP services; read [references/networking-and-tunnels.md](references/networking-and-tunnels.md).
-- Use Volumes or CloudBucketMounts for persisted or shared files, and snapshots for restore flows; read [references/files-and-persistence.md](references/files-and-persistence.md) and [references/snapshots.md](references/snapshots.md).
+- Use one-shot `Sandbox.exec(...)` for isolated commands and output capture when the sandbox does not need to preserve conversational state across requests. Read [references/lifecycle-and-exec.md](references/lifecycle-and-exec.md).
+- Use a long-lived controller loop when the sandbox must keep state across requests or support repeated `stdin` and `stdout` interaction. Read [references/example-patterns.md](references/example-patterns.md).
+- Use tunnels when the sandbox must expose HTTP or TCP services and the client needs a public or restricted URL. Read [references/networking-and-tunnels.md](references/networking-and-tunnels.md).
+- Use Volumes or CloudBucketMounts for persisted or shared files, and use snapshots only for explicit restore flows. Read [references/files-and-persistence.md](references/files-and-persistence.md) and [references/snapshots.md](references/snapshots.md).
 - Reattach to a live sandbox with `Sandbox.from_id(...)` or `Sandbox.from_name(...)` instead of creating duplicates.
 
 ## Default Rules
@@ -51,10 +63,15 @@ sandbox = modal.Sandbox.create("sh", "-lc", "sleep 300", app=app)
 - Bake static inputs into the image at build time, and use Volumes or CloudBucketMounts for files that must outlive one sandbox or be shared across runs.
 - Prefer filesystem or directory snapshots for restore flows. Use memory snapshots only when in-memory process state matters enough to justify their current limitations.
 - Use `detach()` when the sandbox should keep running after the client disconnects, and `terminate()` when the sandbox should stop immediately.
+- Keep this skill focused on sandbox lifecycle and isolated execution. Do not use it for ordinary stateless `@app.function` deployments or generic Modal app hosting.
+- If the task is really about fine-tuning or post-training, stop and use `modal-finetuning`.
+- If the task is really about vLLM or SGLang model serving, stop and use `modal-llm-serving`.
+- If the task is really about detached batch orchestration or `@modal.batched`, stop and use `modal-batch-processing`.
 
 ## Validate
 
 - Run `npx skills add . --list` after editing the package metadata or skill descriptions.
+- Keep `evals/evals.json` and `evals/trigger-evals.json` aligned with the actual workflow boundary of the skill.
 - Run [scripts/smoke_test.py](scripts/smoke_test.py) with a Python interpreter that can import `modal` when changing lifecycle, `exec(...)`, or file-IO guidance.
 
 ## References

@@ -1,6 +1,13 @@
 ---
 name: modal-llm-serving
-description: Serve open-weight LLMs on Modal with vLLM or SGLang, including OpenAI-compatible HTTP APIs, low-latency regional deployments, cold-start reduction, and throughput-oriented batch inference. Use when the user wants to deploy or serve an open-weight model (Llama, Mistral, Gemma, Qwen, Phi, Falcon, etc.) on Modal, needs an OpenAI-compatible API endpoint backed by a self-hosted model they can point their OpenAI SDK client at, is troubleshooting vLLM cold starts or OOM errors on Modal GPUs, wants to reduce cold-start time with memory snapshots or keep-warm containers, needs to optimize throughput or tokens-per-dollar for batch LLM inference on Modal, wants low-latency serving with SGLang and regional routing, or is tuning knobs like concurrent inputs, tensor parallelism, Volume caching, or GPU memory utilization for a Modal LLM service. Do not use for fine-tuning, RAG, training, or general ML pipelines.
+description: >-
+  Use this skill for self-hosted open-weight text LLM serving on Modal with
+  vLLM or SGLang. Trigger when the user wants an OpenAI-compatible endpoint for
+  a model they host, needs to tune cold starts, latency, concurrency, tensor
+  parallelism, or throughput for text generation, or wants offline batch text
+  inference with the vLLM engine. Do not use it for embeddings, generic
+  Hugging Face pipeline serving, diffusion, fine-tuning, RAG, or apps that
+  only call OpenAI's hosted API.
 license: MIT
 ---
 
@@ -8,17 +15,30 @@ license: MIT
 
 ## Quick Start
 
-1. Confirm the workload goal before writing code:
-   - standard online API
-   - cold-start-sensitive vLLM deployment
-   - low-latency interactive serving
-   - high-throughput batch inference
-2. Read [references/performance-playbook.md](references/performance-playbook.md).
-3. Read exactly one primary reference:
-   - Standard online API: [references/vllm-online-serving.md](references/vllm-online-serving.md)
-   - Cold starts: [references/vllm-cold-starts.md](references/vllm-cold-starts.md)
-   - Low latency: [references/sglang-low-latency.md](references/sglang-low-latency.md)
-   - Throughput or batch inference: [references/vllm-throughput.md](references/vllm-throughput.md)
+1. Verify the actual local Modal environment before writing code.
+
+```bash
+modal --version
+python -c "import modal,sys; print(modal.__version__); print(sys.executable)"
+modal profile current
+```
+
+- Do not assume the default `python` interpreter matches the environment behind the `modal` CLI.
+
+2. Confirm that the request is really about self-hosted open-weight text generation on Modal.
+
+- Standard online API
+- Cold-start-sensitive vLLM deployment
+- Low-latency interactive serving
+- High-throughput or offline batch text inference
+
+3. Read [references/performance-playbook.md](references/performance-playbook.md) and then exactly one primary reference.
+
+- Standard online API: [references/vllm-online-serving.md](references/vllm-online-serving.md)
+- Cold starts: [references/vllm-cold-starts.md](references/vllm-cold-starts.md)
+- Low latency: [references/sglang-low-latency.md](references/sglang-low-latency.md)
+- Throughput or batch inference: [references/vllm-throughput.md](references/vllm-throughput.md)
+
 4. Default to vLLM plus `@modal.web_server` unless the user explicitly optimizes for lowest latency or offline throughput.
 5. Ground every implementation in the actual workload: target latency or throughput, model size and precision, GPU type and count, region, concurrency target, and cold-start tolerance.
 
@@ -27,7 +47,7 @@ license: MIT
 - Use vLLM with `@modal.web_server` for the default OpenAI-compatible serving path. Read [references/vllm-online-serving.md](references/vllm-online-serving.md).
 - Use vLLM with memory snapshots and a sleep or wake flow only when cold-start latency is a first-class requirement. Read [references/vllm-cold-starts.md](references/vllm-cold-starts.md).
 - Use SGLang with `modal.experimental.http_server`, explicit region selection, and sticky routing when the user cares most about latency. Read [references/sglang-low-latency.md](references/sglang-low-latency.md).
-- Use the vLLM Python `LLM` interface inside `@app.cls` or another batch worker when the task is about tokens per second or tokens per dollar rather than HTTP serving. Read [references/vllm-throughput.md](references/vllm-throughput.md).
+- Use the vLLM Python `LLM` interface inside `@app.cls` or another batch worker when the task is about tokens per second or tokens per dollar rather than per-request HTTP behavior. Read [references/vllm-throughput.md](references/vllm-throughput.md).
 
 ## Default Rules
 
@@ -41,10 +61,15 @@ license: MIT
 - Use SGLang only when lowest latency is the explicit objective and the extra setup is justified.
 - Use the vLLM Python `LLM` interface only for offline or batch inference that does not need per-request HTTP behavior.
 - Use snapshot-based cold-start reduction only when startup latency matters enough to justify extra operational complexity.
+- Keep the scope on self-hosted text generation engines. Do not stretch this skill to cover embeddings, generic `transformers` pipelines, diffusion inference, or purely hosted-API usage.
+- If the task is really about training or post-training, stop and use `modal-finetuning`.
+- If the task is really about detached job orchestration, retries, or `.map` and `.spawn`, stop and use `modal-batch-processing`.
+- If the task is really about isolated interactive execution or sandbox lifecycle, stop and use `modal-sandbox`.
 
 ## Validate
 
 - Run `npx skills add . --list` after editing the package metadata or skill descriptions.
+- Keep `evals/evals.json` and `evals/trigger-evals.json` aligned with the actual workflow boundary of the skill.
 - Run `python3 -m py_compile skills/modal-llm-serving/scripts/qwen3_throughput.py` when changing the throughput artifact.
 
 ## References

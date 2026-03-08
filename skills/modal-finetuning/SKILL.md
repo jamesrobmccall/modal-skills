@@ -1,6 +1,12 @@
 ---
 name: modal-finetuning
-description: Design and debug Modal GPU fine-tuning workflows for LLM SFT/LoRA/QLoRA, diffusion LoRA, YOLO-style vision training, and GRPO post-training. Use whenever the user wants to fine-tune, post-train, adapt, resume, checkpoint, or tune a model on Modal GPUs, even if they only mention Unsloth, PEFT, LoRA, QLoRA, YOLO, Diffusers, GRPO, TRL, or verl. Do not use for from-scratch pretraining, inference serving, sandbox lifecycle, or generic batch orchestration.
+description: >-
+  Use this skill for Modal GPU fine-tuning and post-training: LLM SFT, LoRA,
+  QLoRA, diffusion LoRA, YOLO-style vision training, and GRPO. Trigger when
+  the user wants to adapt model weights, resume or checkpoint training, choose
+  GPUs, stage datasets, or persist training artifacts on Modal. Do not use it
+  for inference serving, detached job orchestration, sandbox lifecycle, or
+  from-scratch pretraining.
 license: MIT
 ---
 
@@ -17,14 +23,27 @@ modal profile current
 ```
 
 - Do not assume the default `python` interpreter matches the environment behind the `modal` CLI.
-- Read [references/training-playbook.md](references/training-playbook.md) first.
-- Confirm the training goal before writing code: LLM supervised fine-tuning, diffusion LoRA, YOLO-style vision fine-tuning, or GRPO post-training.
-- Ground every implementation in the actual task: base model, dataset location and format, GPU type and count, checkpoint destination, secrets, and what should happen after training finishes.
+
+2. Classify the training goal before writing code.
+
+- Adapt a text model with supervised fine-tuning, LoRA, or QLoRA.
+- Train a diffusion LoRA for image generation or style adaptation.
+- Fine-tune a YOLO-style vision model on labeled images.
+- Run GRPO as RL-style post-training.
+
+3. Read [references/training-playbook.md](references/training-playbook.md) and then exactly one primary workflow reference.
+
+- LLM SFT, LoRA, or QLoRA: [references/llm-sft-and-lora.md](references/llm-sft-and-lora.md)
+- Diffusion LoRA or YOLO: [references/vision-and-diffusion-finetuning.md](references/vision-and-diffusion-finetuning.md)
+- GRPO: [references/rl-post-training.md](references/rl-post-training.md)
+
+4. Ground every implementation in the actual task: base model, dataset location and format, GPU type and count, checkpoint destination, secrets, and what should happen after training finishes.
 
 ## Choose the Workflow
 
-- Use Unsloth or another PEFT-style path for LLM SFT, LoRA, or QLoRA on a single node. Read [references/llm-sft-and-lora.md](references/llm-sft-and-lora.md).
-- Use the combined vision and diffusion path for YOLO dataset training or Diffusers LoRA image fine-tuning. Read [references/vision-and-diffusion-finetuning.md](references/vision-and-diffusion-finetuning.md).
+- Use the LLM path for supervised fine-tuning, LoRA, or QLoRA on a single node. Prefer Unsloth or another PEFT-style workflow unless the user explicitly needs full-parameter updates. Read [references/llm-sft-and-lora.md](references/llm-sft-and-lora.md).
+- Use the diffusion path when the goal is image-generation adaptation, style transfer, or a small concept or brand LoRA. Keep checkpoints and sample outputs easy to inspect later. Read [references/vision-and-diffusion-finetuning.md](references/vision-and-diffusion-finetuning.md).
+- Use the YOLO path when the task is labeled vision training for detection or related downstream evaluation. Keep dataset staging and exported weights separate from later serving. Read [references/vision-and-diffusion-finetuning.md](references/vision-and-diffusion-finetuning.md).
 - Use GRPO only for reinforcement-learning-style post-training. Prefer TRL for the simpler single-node path, and use verl when the task needs a more explicit rollout or trainer split, or more advanced vLLM-backed RL plumbing. Read [references/rl-post-training.md](references/rl-post-training.md).
 
 ## Default Rules
@@ -38,6 +57,7 @@ modal profile current
 - Use `@app.local_entrypoint` or a plain local launcher to expose hyperparameters and dataset switches as CLI arguments instead of hard-coding every experiment.
 - Keep the first version single-node unless the user explicitly asks for clusters. Modal multi-node training is a separate advanced path and is currently a beta workflow.
 - Store final artifacts in a layout that makes handoff obvious: base model cache, dataset cache, checkpoint tree, and final exported weights or adapters.
+- Separate training outputs from later serving. Hand the exported model or adapter off to a serving workflow instead of mixing training and HTTP serving in one artifact.
 - If the task is really about serving the tuned model behind HTTP, OpenAI-compatible APIs, vLLM, or SGLang, stop and use `modal-llm-serving`.
 - If the task is really about detached job orchestration, queueing, `.map`, `.spawn`, or `@modal.batched`, stop and use `modal-batch-processing`.
 - If the task is really about sandbox lifecycle, tunnels, `Sandbox.exec(...)`, or secure runtime code execution infrastructure, stop and use `modal-sandbox`.
@@ -45,7 +65,7 @@ modal profile current
 ## Validate
 
 - Run `npx skills add . --list` after editing the package metadata or skill descriptions.
-- Keep `evals/evals.json` aligned with the actual workflow boundaries of the skill.
+- Keep `evals/evals.json` and `evals/trigger-evals.json` aligned with the actual workflow boundaries of the skill.
 
 ## References
 

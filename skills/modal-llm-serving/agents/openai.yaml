@@ -1,7 +1,7 @@
 interface:
   display_name: "Modal LLM Serving"
-  short_description: "Deploy and tune Modal-hosted vLLM or SGLang inference services."
-  default_prompt: "Use $modal-llm-serving to deploy, benchmark, or debug a Modal-hosted vLLM or SGLang inference service."
+  short_description: "Serve self-hosted open-weight text LLMs on Modal."
+  default_prompt: "Use $modal-llm-serving to deploy, benchmark, or debug a self-hosted open-weight text generation service on Modal with vLLM or SGLang, not embeddings, diffusion, or hosted-API-only usage."
   tags:
     - modal
     - llm
