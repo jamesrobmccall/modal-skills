@@ -1,7 +1,7 @@
 interface:
   display_name: "Modal Sandbox"
-  short_description: "Create and operate Modal Sandboxes for code execution, tunnels, and persistence."
-  default_prompt: "Use $modal-sandbox to create, attach to, debug, or persist a Modal Sandbox workflow."
+  short_description: "Operate Modal Sandboxes for isolated execution and tunnels."
+  default_prompt: "Use $modal-sandbox to create, attach to, debug, or restore a Modal Sandbox workflow for isolated execution, long-lived controllers, file exchange, or tunneled services, not regular app functions."
   tags:
     - modal
     - sandbox

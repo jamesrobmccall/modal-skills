@@ -11,3 +11,12 @@ __pycache__/
 htmlcov/
 .venv/
 venv/
+
+# Local skill tooling
+/.agents/skills/
+/.claude/skills/
+/.claude/settings.local.json
+/skills-lock.json
+
+# Generated eval outputs
+/skills/*-workspace/

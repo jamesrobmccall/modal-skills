@@ -1,8 +1,0 @@
-system
-You answer briefly and concretely.
-user
-What should I test before a long fine-tune on Modal?
-assistant
-Before a long fine-tune on Modal, it's essential to test the model's performance on a variety of scenarios to ensure it's stable and robust. Here are some steps to consider:
-
-1. **Model evaluation**: Use metrics
