@@ -1,6 +1,6 @@
 # Modal Skills
 
-Anthropic-first [Claude Skills](https://claude.com/blog/complete-guide-to-building-skills-for-claude) for working with [Modal](https://modal.com/docs/). The repo packages reusable skills for Modal Sandboxes, GPU fine-tuning, self-hosted LLM inference services, and batch-processing workflows so agents can pick the right Modal pattern without re-deriving it from scratch.
+Agent Skills for working with [Modal](https://modal.com/docs/). The repo packages reusable skills for Modal Sandboxes, GPU fine-tuning, self-hosted LLM inference services, and batch-processing workflows so agents can pick the right Modal pattern without re-deriving it from scratch.
 
 ## Skills
 
